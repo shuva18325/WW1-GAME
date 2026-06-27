@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>IRON &amp; FAITH — Command of the Central Powers</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============ LOADING (Central Powers leaders + flags) ============ -->
+<div id="loading" class="screen active">
+  <canvas id="loadCanvas"></canvas>
+  <div id="loadbarWrap"><div id="loadbar"></div></div>
+  <div id="loadQuote"></div>
+  <div id="loadHint">IRON &amp; FAITH — a WW1 strategy game of the Central Powers</div>
+</div>
+
+<!-- ============ MAIN MENU ============ -->
+<div id="menu" class="screen">
+  <div class="title">IRON &amp; FAITH</div>
+  <div class="subtitle">COMMAND OF THE CENTRAL POWERS</div>
+  <div class="menu-btn" id="btnPlay">⚔ CHOOSE A FRONT</div>
+  <div class="menu-btn" id="btnHelp">📖 HOW TO PLAY</div>
+  <div class="flags-row" id="menuFlags"></div>
+</div>
+
+<!-- ============ HELP ============ -->
+<div id="help" class="screen">
+  <div class="back-btn menu-btn mini back-to-menu">← Menu</div>
+  <div class="help">
+    <h2>How to Command</h2>
+    <p>You are a <b>general of the Central Powers</b>. You never control a single soldier — you spawn, position, supply and lead whole formations.</p>
+    <h3>Resources</h3>
+    <p><b>⚔ Manpower</b> and <b>⛽ Supply</b> pay for every unit. They regenerate over time (Germany fastest).</p>
+    <h3>Deploying troops</h3>
+    <p>Click a <b>unit card</b> (bottom) or press <b>1–9</b>. Units appear at your HQ and move up the <b>active lane</b>. Click the battlefield or use ▲/▼ to pick the active lane.</p>
+    <h3>Orders</h3>
+    <p><b>A</b>dvance · <b>H</b>old (man the trench) · <b>F</b>all back. Engineers (<b>E</b>) upgrade the trench; <b>W</b> lays barbed wire.</p>
+    <h3>Special Ability</h3>
+    <p>The big central button charges over time. Press <b>R</b> when it glows to unleash your faction power (German Support, Industrial Surge, Artillery Barrage, Mountain Hold, Desert Raid).</p>
+    <h3>Watch out for</h3>
+    <p><b>Tanks</b> (German troops fear them until you field your own armour) · <b>naval bombardment</b> · <b>weather</b> · <b>morale &amp; desertion</b> · front-specific events.</p>
+    <h3>Win / Lose</h3>
+    <p><b>Defence</b> fronts: survive the timer. <b>Offence/Mixed</b>: smash the enemy HQ. You lose if your HQ falls. <b>Space</b> = pause.</p>
+  </div>
+</div>
+
+<!-- ============ CAMPAIGN SELECT ============ -->
+<div id="campaign-select" class="screen">
+  <div class="back-btn menu-btn mini back-to-menu">← Menu</div>
+  <h2>CHOOSE A FRONT</h2>
+  <div class="grid" id="campGrid"></div>
+</div>
+
+<!-- ============ DIFFICULTY ============ -->
+<div id="difficulty-select" class="screen">
+  <div class="back-btn menu-btn mini back-to-camp">← Fronts</div>
+  <h2 id="diffTitle"></h2>
+  <div class="subtitle" id="diffSub"></div>
+  <p id="diffBrief" style="max-width:560px;text-align:center;color:#bcae8c;font-size:13px"></p>
+  <div class="diff-list" id="diffList"></div>
+</div>
+
+<!-- ============ BATTLE ============ -->
+<div id="battle" class="screen">
+  <div id="stage"><canvas id="game"></canvas></div>
+
+  <div class="hud" id="resbar">
+    <span>⚔ <b id="rm">0</b></span>
+    <span>⛽ <b id="rs">0</b></span>
+    <span>⏱ <b id="rt">0</b>s</span>
+    <span>👥 <b id="runits">0</b></span>
+  </div>
+
+  <div class="hud" id="orders"></div>
+
+  <div class="hud" id="ability">
+    <div id="abilityBtn">SPECIAL</div>
+    <div id="chargeWrap"><div id="chargeBar"></div></div>
+  </div>
+
+  <div class="hud" id="intel">
+    <div class="panel">
+      <div id="intelText" style="color:#e8dcc0;margin-bottom:6px"></div>
+      <div id="meters"></div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <div class="hud" id="deck"></div>
+
+  <div class="hud menu-btn mini" id="pausebtn">⏸ Pause</div>
+  <div class="hud" id="banner"><h2></h2><p></p></div>
+</div>
+
+<!-- ============ AFTERMATH ============ -->
+<div id="aftermath" class="screen">
+  <div class="res-card">
+    <h1 id="resTitle"></h1>
+    <p id="resSub" style="margin:8px 0 18px;color:#cbb98e"></p>
+    <div id="resStats"></div>
+    <div class="menu-btn" id="btnReplay" style="margin-top:18px">⚔ ANOTHER FRONT</div>
+    <div class="menu-btn mini back-to-menu" style="margin-top:6px">← Menu</div>
+  </div>
+</div>
+
+<script src="js/sprites.js"></script>
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
