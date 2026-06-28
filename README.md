@@ -47,6 +47,13 @@ Procedural **chunky pixel-art**, re-coloured & re-helmeted per nationality (Stah
 | Black Sea Naval Clash | Caucasus Winter Offensive |
 | ![Black Sea](screenshots/black_sea.png) | ![Caucasus Winter](screenshots/caucasus_winter.png) |
 
+### v4 upgrades
+**Real map, not blobs:** the signboard & intro now render the **actual country borders** of the WW1 theatre (built from public‑domain world GeoJSON, `js/europe_geo.js`) coloured by 1914 alliance — true coastlines for Britain, Iberia, Italy, Greece, Anatolia, North Africa, etc. · **Treaties & Outcomes** section with signing‑hall cutscenes and historical outcomes: **Brest‑Litovsk**, **Versailles**, **Saint‑Germain**, and **Sèvres — "the Caliphate is now a hollow shell."**
+
+| Real-border theatre map (menu) | Treaty of Sèvres outcome |
+|---|---|
+| ![Menu map](screenshots/menu.png) | ![Sèvres](screenshots/treaty_sevres.png) |
+
 ### v3 upgrades
 **Wooden signboard menu** with a **pixelated "World War I in Europe" theatre map** (green Central Powers, orange Allied, cream neutral, battle stars, movement arrows, legend) + green **START!!** button · opening cinematic shows the same map pixelated & zooming · **Air Raid system** (bombers & zeppelins, new **Fuel** resource, weather accuracy, anti-air interception, suppression & infrastructure damage — formulas in `PLANNING.md §28.2`) · **PRE-WAR campaigns**: *Taiping Rebellion* (Qing Empire), *Balkan Wars* (Ottoman), and *The Khedivate Dissolved* historical cutscene.
 

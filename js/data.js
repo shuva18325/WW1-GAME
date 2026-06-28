@@ -328,6 +328,28 @@
       events:['mass_assault','ambush_ready','river_crossing'],
       brief:'The Balkan League — Serbia, Bulgaria, Greece, Montenegro — turns on the empire. Defend Ottoman Europe in the mountain passes in the last war before the Great War.',
       intel:'PRE-WAR · Ottoman vs Balkan League · Mountain warfare'
+    },
+
+    // ===== TREATIES & OUTCOMES (post-war cutscenes) =====
+    {
+      id:'treaty_brest', era:'treaty', type:'cutscene', name:'Treaty of Brest-Litovsk', flag:'german', enemyNation:'russian',
+      subtitle:'3 March 1918 — Russia exits the war',
+      brief:'A Central Powers triumph in the east: Bolshevik Russia signs a punishing peace, ceding Poland, the Baltics, Finland and Ukraine.'
+    },
+    {
+      id:'treaty_versailles', era:'treaty', type:'cutscene', name:'Treaty of Versailles', flag:'german', enemyNation:'french',
+      subtitle:'28 June 1919 — the peace that punished Germany',
+      brief:'In the Hall of Mirrors the German Empire is made to accept war guilt, disarmament, reparations and the loss of territory and colonies.'
+    },
+    {
+      id:'treaty_st_germain', era:'treaty', type:'cutscene', name:'Treaty of Saint-Germain', flag:'austria', enemyNation:'french',
+      subtitle:'10 September 1919 — the Dual Monarchy dissolved',
+      brief:'Austria-Hungary is dismembered into successor states; the eleven-tongued empire ceases to exist.'
+    },
+    {
+      id:'treaty_sevres', era:'treaty', type:'cutscene', name:'Treaty of Sèvres', flag:'ottoman', enemyNation:'british',
+      subtitle:'10 August 1920 — the Caliphate reduced to a shell',
+      brief:'The Ottoman Empire is partitioned among the victors. The Sultan-Caliph keeps a throne in name only — the Caliphate is now a hollow shell.'
     }
   ];
 

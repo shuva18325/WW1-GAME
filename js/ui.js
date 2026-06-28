@@ -106,22 +106,62 @@
       grid.appendChild(card);
     };
     const prewar=D.CAMPAIGNS.filter(c=>c.era==='prewar');
-    const wwi=D.CAMPAIGNS.filter(c=>c.era!=='prewar');
+    const treaty=D.CAMPAIGNS.filter(c=>c.era==='treaty');
+    const wwi=D.CAMPAIGNS.filter(c=>!c.era);
     if(prewar.length){ mkHead('⏳ PRE-WAR'); prewar.forEach(mkCard); }
     mkHead('⚔ THE GREAT WAR — CENTRAL POWERS'); wwi.forEach(mkCard);
+    if(treaty.length){ mkHead('📜 TREATIES & OUTCOMES'); treaty.forEach(mkCard); }
   }
 
-  // ---------------------------------------------------------------- CUTSCENE (e.g. Khedivate dissolved)
+  // ---------------------------------------------------------------- CUTSCENES (pre-war scenes + treaties)
+  const CUTSCENE_TEXT = {
+    khedivate:`<p><b>Cairo, 18 December 1914.</b></p>
+      <p>With the Ottoman Empire now at war alongside the Central Powers, Britain severs Egypt from Constantinople: the <b>Khedivate is dissolved</b>, the pro‑Ottoman Khedive Abbas II Hilmi is deposed, and Egypt is proclaimed a <b>Sultanate under British protection</b>.</p>
+      <p>The green standard of the Sultan is lowered over the Citadel of Cairo; the Union Jack rises beside the Nile. The road to Gallipoli, Sinai and the Suez is set.</p>`,
+    treaty_brest:`<p><b>A Central Powers victory in the East.</b></p>
+      <p>Outcome — Russia cedes <b>Poland, Lithuania, the Baltic provinces, Finland and Ukraine</b>; the Eastern Front collapses and German divisions turn west for the 1918 offensive. The empire's high-water mark.</p>`,
+    treaty_versailles:`<p><b>The Hall of Mirrors, Versailles.</b></p>
+      <p>Outcome — Germany accepts the <b>War Guilt clause</b>, an army capped at 100,000, a demilitarised Rhineland, crushing <b>reparations</b>, and the loss of Alsace‑Lorraine and all colonies. A peace that sows the next war.</p>`,
+    treaty_st_germain:`<p><b>The Dual Monarchy dissolved.</b></p>
+      <p>Outcome — Austria‑Hungary is broken into <b>Austria, Hungary, Czechoslovakia, Yugoslavia</b> and ceded lands. The eleven‑tongued empire is no more; the multi‑ethnic army you once held together is scattered into new nations.</p>`,
+    treaty_sevres:`<p><b>Sèvres, 1920 — the Caliphate hollowed out.</b></p>
+      <p>Outcome — the Ottoman Empire is <b>partitioned</b>: the Arab provinces, Smyrna and the Straits are stripped away; the realm shrinks to a rump. The Sultan‑Caliph keeps a throne in name only — <b>the Caliphate is now a hollow shell</b>.</p>
+      <p><i>(History's reply: the resistance under Mustafa Kemal would tear up Sèvres at Lausanne — and abolish the Caliphate altogether in 1924.)</i></p>`
+  };
   function showCutscene(c){
     show('cutscene');
     const cv=$('cutsceneCanvas'); cv.width=720; cv.height=300; const x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
     if(c.id==='khedivate') drawKhedivate(x);
+    else if(c.id.startsWith('treaty_')) drawTreaty(x, c);
     $('cutsceneTitle').textContent=c.name;
-    $('cutsceneText').innerHTML =
-      `<p><b>${c.subtitle}</b></p>
-       <p>18 December 1914. With the Ottoman Empire now at war alongside the Central Powers, Britain severs Egypt from Constantinople: the <b>Khedivate is dissolved</b>, the pro‑Ottoman Khedive Abbas II Hilmi is deposed, and Egypt is proclaimed a <b>Sultanate under British protection</b>.</p>
-       <p>The green standard of the Sultan is lowered over the Citadel of Cairo; the Union Jack rises beside the Nile. The road to Gallipoli, Sinai and the Suez is set — and the desert war begins.</p>`;
+    $('cutsceneText').innerHTML = `<p style="color:#ffe9b0"><b>${c.subtitle}</b></p>` + (CUTSCENE_TEXT[c.id]||`<p>${c.brief}</p>`);
     Sound.resume(); Sound.SFX.defeat();
+  }
+  // signing-hall scene: victor flag raised, defeated flag lowered/faded
+  function drawTreaty(x, c){
+    const victor = c.enemyNation || 'french', loser = c.flag || 'german';
+    // panelled hall
+    const g=x.createLinearGradient(0,0,0,300); g.addColorStop(0,'#5a3f2a'); g.addColorStop(1,'#3a2716'); x.fillStyle=g; x.fillRect(0,0,720,300);
+    x.fillStyle='#6b4a2e'; for(let i=0;i<720;i+=60) x.fillRect(i,0,2,220);          // wall panelling
+    x.fillStyle='#caa45a'; x.fillRect(0,40,720,4);                                   // gilt cornice
+    x.fillStyle='#2a1c10'; x.fillRect(0,220,720,80);                                  // floor
+    x.fillStyle='#3a2818'; for(let i=0;i<720;i+=40) x.fillRect(i,220,2,80);
+    // tall windows
+    for(let i=0;i<4;i++){ const wx=70+i*180; x.fillStyle='#bcd6e0'; x.fillRect(wx,60,46,120); x.fillStyle='#8aabb8'; x.fillRect(wx+22,60,2,120); x.fillStyle='#caa45a'; x.fillRect(wx-3,57,52,4); }
+    // long signing table + documents
+    x.fillStyle='#23502f'; x.fillRect(140,210,440,26); x.fillStyle='#1c3f25'; x.fillRect(140,232,440,8);
+    x.fillStyle='#efe7d2'; for(let i=0;i<5;i++) x.fillRect(180+i*86,214,40,14);       // papers
+    // delegations (silhouettes)
+    x.fillStyle='#1a120a'; for(let i=0;i<6;i++){ const sx=170+i*70; x.fillRect(sx,180,14,32); x.beginPath(); x.arc(sx+7,176,7,0,7); x.fill(); }
+    // flags on the wall: victor raised bright, loser lowered & faded
+    x.save(); S.drawFlag(x, 150, 150, victor, 6); if(victor==='ottoman') S.drawOttomanCrescent(x,150,150); x.restore();
+    x.globalAlpha=0.45; S.drawFlag(x, 540, 196, loser, 0); if(loser==='ottoman') S.drawOttomanCrescent(x,540,196); x.globalAlpha=1;
+    // a torn map being divided (for Sèvres / partitions)
+    x.fillStyle='#e8dcc0'; x.fillRect(300,150,120,46); x.strokeStyle='#7a1f1f'; x.lineWidth=2;
+    x.beginPath(); x.moveTo(360,150); x.lineTo(360,196); x.stroke();                 // partition line
+    x.strokeStyle='#3a2c1c'; x.lineWidth=1; x.strokeRect(300,150,120,46);
+    x.fillStyle='rgba(0,0,0,0.25)'; x.fillRect(0,0,720,28);
+    x.fillStyle='#ffe9b0'; x.font='bold 14px Georgia'; x.textAlign='center'; x.fillText('THE PEACE IS DICTATED', 360, 19); x.textAlign='left';
   }
   function drawKhedivate(x){
     // desert sky + Nile + pyramids + citadel; Ottoman flag lowering, Union Jack rising
