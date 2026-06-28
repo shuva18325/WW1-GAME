@@ -7,7 +7,9 @@ A WW1 **campaign-style real-time strategy game** where you are a **commander / g
 ![The Central Powers — loading screen](assets/loading.png)
 
 ## ▶ Play it now (no install)
-**▶ [Play in your browser](https://raw.githack.com/shuva18325/WW1-GAME/claude/ww1-central-powers-game-skaf1l/index.html)** — runs the latest commit on this branch directly, nothing to set up.
+**▶ [PLAY IN YOUR BROWSER](https://raw.githack.com/shuva18325/WW1-GAME/claude/ww1-central-powers-game-skaf1l/index.html)** — latest build, nothing to set up.
+
+(Stable snapshot, if the above ever lags: <https://rawcdn.githack.com/shuva18325/WW1-GAME/1b869f625591b7f51792edb211b6387de99422a4/index.html>)
 
 Or open **`index.html`** locally in any modern browser (Chrome, Firefox, Edge, Safari).
 The first screen is an **opening cinematic** → **Central Powers leaders + flags** loading screen → main menu → **choose a front** → pick a difficulty → command.
