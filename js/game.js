@@ -63,15 +63,19 @@
       activeLane: 2, order: 'hold',
       cooldowns: {},               // per-unit-id spawn cooldown
       paused: false, over: false, won: false,
-      weather: 'clear', weatherT: 0,
+      weather: camp.startWeather||'clear', weatherT: camp.startWeather?9999:0,
       meters: { caliphate: 60, cohesion: camp.rules.multiethnic?55:100, heat: 0, cold: 0 },
       tankResearched: false,
       enemyTimer: rnd(2,4), eventTimer: 12, eventIdx: 0,
       naval: { active:false, t:0, lane:0 },
       stats: { kills:0, lost:0, defected:0 },
-      voiceCool: 0,
+      voiceCool: 0, frozenT:0,
+      artyMode:false, artyAim:{x:W*0.7,y:H*0.5}, artyCd:0,   // manual artillery control
+      shoreBatteries:0,                                       // naval/coastal defence
       bg: buildBackground(theme, camp)
     };
+    FX.reset();
+    Sound.resume(); Sound.startAmbience(camp.theme); Sound.startMusic();
 
     // starting defensive structures (trench segments per lane)
     G.trenches = [];
@@ -127,10 +131,15 @@
     if(G.weather!=='clear'){ G.weatherT-=dt; if(G.weatherT<=0){ G.weather='clear'; } }
 
     // naval bombardment
+    if(G.navalFlash>0) G.navalFlash-=dt;
+    if(G.camp.rules.naval){            // coastal fronts: the fleet keeps shelling
+      G.navalAmbient=(G.navalAmbient==null?rnd(5,9):G.navalAmbient)-dt;
+      if(G.navalAmbient<=0 && !G.naval.active){ G.naval={active:true,t:0.4,shots:rint(3,6)}; G.navalAmbient=rnd(11,18); }
+    }
     if(G.naval.active){
       G.naval.t-=dt;
       if(G.naval.t<=0){
-        navalStrike(); G.naval.t=rnd(1.2,2.2); G.naval.shots=(G.naval.shots||5)-1;
+        navalStrike(); G.naval.t=rnd(1.0,2.0); G.naval.shots=(G.naval.shots||5)-1;
         if(G.naval.shots<=0) G.naval.active=false;
       }
     }
@@ -146,9 +155,16 @@
       G.eventTimer = rnd(16,26);
     }
 
+    if(G.frozenT>0) G.frozenT-=dt;
+    if(G.artyCd>0) G.artyCd-=dt;
+
     updateUnits(dt);
     updateProjectiles(dt);
     updateEffects(dt);
+    FX.update(dt);
+
+    // tank engine rumble while armour is on the field
+    Sound.setRumble(G.units.some(u=>u.alive && u.def.flags.isTank));
 
     // win / lose
     if(G.hqPlayer<=0){ endGame(false); return; }
@@ -187,6 +203,12 @@
           u.morale -= dt*10*G.diff.tankFear; u.fear=0.6; break; } }
       }
       if(u.fear>0) u.fear-=dt;
+
+      // burning damage-over-time (flamethrower)
+      if(u.burning>0){ u.burning-=dt; u.hp-=dt*9; u.morale-=dt*7; FX.burning(u.x, u.y-12);
+        if(u.hp<=0){ killUnit(u); continue; } }
+      // officer morale aura (passive)
+      if(u.def.flags.officer){ for(const a of G.units){ if(a.alive&&a.side===u.side&&a!==u&&Math.abs(a.x-u.x)<150&&Math.abs(a.lane-u.lane)<=1) a.morale=Math.min(a.maxMorale,a.morale+dt*7); } }
 
       // morale -> rout -> rally / desert
       if(u.morale<=0 && !u.routing){ u.routing=true; u.routTimer=rnd(3,6); speak(u,'…fall back!'); }
@@ -227,6 +249,23 @@
       return;
     }
 
+    // OFFICER: holds near the line, fires sidearm, calls a mini-barrage
+    if(d.flags.officer){
+      const line = ownTrench(u)?ownTrench(u).x:(u.side==='player'?PLAYER_TRENCH:ENEMY_TRENCH);
+      if((dirToEnemy>0&&u.x<line)||(dirToEnemy<0&&u.x>line)){ u.x+=dirToEnemy*d.speed*dt; u.pose='walk'; }
+      else u.pose='idle';
+      const ot=acquire(u);
+      u.barrageCd=(u.barrageCd!=null?u.barrageCd:rnd(5,9))-dt;
+      if(u.barrageCd<=0 && ot){
+        u.pose='command';
+        for(let i=0;i<3;i++){ const tx=ot.x+rnd(-34,34), ty=laneY(ot.lane);
+          addEffect({type:'shell',x:u.x,y:u.y-20,tx,ty,t:0,dur:0.7,onLand:()=>explode(tx,ty,38,16,u.side,true)}); }
+        if(u.side==='player'){ speakFaction('ability'); Sound.SFX.shout(); FX.popup(u.x,u.y-48,'FIRE MISSION!','255,210,130'); }
+        u.barrageCd=rnd(10,15);
+      } else if(ot && dist(u,ot)<=d.range){ u.cd-=dt; if(u.cd<=0){ shoot(u,ot,d.range); u.cd=fireInterval(d); } }
+      return;
+    }
+
     // find target
     const tgt = acquire(u);
     const rng = d.range * (G.weather==='sandstorm' && !d.flags.indirect ? 0.5 : 1);
@@ -237,15 +276,17 @@
       if(Math.abs(u.x-back)>10){ u.x += (back-u.x>0?1:-1)*d.speed*dt; u.pose='walk'; return; }
       u.pose='idle';
       u.cd-=dt;
-      if(u.cd<=0 && tgt){ lobShell(u,tgt); u.cd = 1/d.fireRate; }
+      if(u.cd<=0 && tgt){ lobShell(u,tgt); u.cd = fireInterval(d); }
       return;
     }
 
     if(tgt && dist(u,tgt) <= rng){
       // in range: fire
       u.pose='fire'; u.cd-=dt;
-      if(u.cd<=0){ shoot(u,tgt,rng); u.cd = 1/d.fireRate; }
-      // ambushers reveal & burst
+      if(u.cd<=0){
+        if(d.flags.flame) flameAttack(u,tgt); else shoot(u,tgt,rng);
+        u.cd = fireInterval(d);
+      }
       return;
     }
 
@@ -260,8 +301,11 @@
     if(move!==0){
       let sp=d.speed;
       if(G.weather==='mud') sp*=0.7;
-      if(d.flags.mountain && (G.camp.theme==='mountain'||G.camp.theme==='snow')) sp*=1.0;
+      if((G.weather==='cold'||G.weather==='snow') && !d.flags.mountain) sp*=0.82;
       u.x += move*sp*dt; u.pose='walk';
+      // tank/vehicle treads + camel hooves kick up dust
+      if(d.flags.isTank||d.flags.vehicle){ u.tread=(u.tread||0)+sp*dt*0.6; if(Math.random()<0.4) FX.dust(u.x-dirToEnemy*16, u.y); }
+      else if(d.flags.isCamel){ if(Math.random()<0.15) FX.dust(u.x-dirToEnemy*10, u.y); }
     } else u.pose='idle';
 
     // reached enemy HQ?
@@ -283,32 +327,64 @@
   }
   function dist(a,b){ return Math.hypot(a.x-b.x,(a.lane-b.lane)*laneH*0.5); }
 
+  function fireInterval(d){ return (1/d.fireRate) * (G.frozenT>0 ? 2.0 : 1); }
+
+  function weaponKind(u){ return u.def.weapon || (u.def.flags.isTank?'tank' : u.def.role==='support'?'mg' : /storm/.test(u.id)?'smg':'rifle'); }
+
   function shoot(u, tgt, rng){
-    // hitscan with tracer
+    const dir=u.side==='player'?1:-1;
     let dmg = u.def.dmg * TEMPO * (u.vet?1+0.12*u.vet:1);
-    if(u.def.flags.ambush && u.ambushReady){ dmg*= (G.fac.mult.ambushPower||1.4); u.ambushReady=false; }
-    // armour
+    if(u.def.flags.ambush && u.ambushReady){ dmg*= (G.fac.mult.ambushPower||1.4); u.ambushReady=false; FX.popup(u.x,u.y-46,'AMBUSH!','255,120,90'); }
     if(tgt.def.armor>0 && !u.def.flags.indirect){
-      const ignore = u.def.flags.antitrench || u.def.flags.antitank;
+      const ignore = u.def.flags.antitrench || u.def.flags.antitank || u.def.flags.isTank;
       dmg *= ignore?1: Math.max(0.14, 1 - tgt.def.armor*0.14);
+      if(!ignore && tgt.def.flags.isTank) FX.sparks(tgt.x, tgt.y-16, -dir);  // rounds spark off armour
     }
-    // suppressed accuracy
     if(u.fear>0) dmg*=0.5;
-    // trench cover for target
     if(inOwnTrench(tgt)) dmg*= 0.7 / Math.max(1, trenchLevelAt(tgt)*0.12+0.6);
     applyDamage(tgt, dmg, u);
-    addEffect({type:'muzzle',x:u.x+(u.side==='player'?12:-12),y:u.y-22,t:0.08});
-    addEffect({type:'tracer',x1:u.x+(u.side==='player'?14:-14),y1:u.y-22,x2:tgt.x,y2:tgt.y-22,t:0.06});
+
+    // muzzle flash + tracer + per-weapon SFX / onomatopoeia
+    const mx=u.x+dir*16, my=u.y-22, wk=weaponKind(u);
+    addEffect({type:'tracer',x1:u.x+dir*14,y1:my,x2:tgt.x,y2:tgt.y-22,t:0.06});
+    if(wk==='tank'){
+      FX.muzzle(mx,my,dir,'tank'); FX.shakeNow(4); FX.flashNow(0.12);
+      Sound.SFX.tank(); if(Math.random()<0.5) FX.popup(u.x,my-22,'KRAA-THOOM!','255,200,120');
+    } else if(wk==='mg'){
+      FX.muzzle(mx,my,dir,'mg'); Sound.SFX.mg();
+      if(Math.random()<0.06) FX.popup(u.x,my-18,'BRRRRT BRRRRT','255,225,150');
+    } else {
+      FX.muzzle(mx,my,dir,'rifle'); Sound.SFX.rifle();
+      if(Math.random()<0.04) FX.popup(u.x,my-18, wk==='shotgun'?'BOOM!':'bang bang','235,225,190');
+    }
+  }
+
+  function flameAttack(u,tgt){
+    const dir=u.side==='player'?1:-1;
+    for(let k=0;k<4;k++) FX.flame(u.x+dir*(14+k*9), u.y-12, dir);
+    Sound.SFX.flame();
+    if(Math.random()<0.1) FX.popup(u.x,u.y-44,'FWOOOSH','255,150,40');
+    for(const e of G.units){ if(!e.alive||e.side===u.side) continue;
+      const dx=(e.x-u.x)*dir;
+      if(dx>0 && dx< (u.def.range+22) && Math.abs(e.lane-u.lane)<=1){
+        applyDamage(e, u.def.dmg*TEMPO, u); e.burning=Math.max(e.burning||0, 1.8); e.morale-=8; }
+    }
   }
 
   function lobShell(u,tgt){
-    const tx=tgt.x, ty=tgt.y;
+    const tx=tgt.x, ty=laneY(tgt.lane);
+    const dir=u.side==='player'?1:-1;
+    FX.muzzle(u.x+dir*16, u.y-22, dir, 'arty'); FX.shakeNow(3);
+    Sound.SFX.artillery();
+    if(Math.random()<0.5) FX.popup(u.x,u.y-46, u.def.flags.siege?'BA-BOOOM!':'BAAANG!','255,210,130');
+    const r = u.def.flags.siege?62:46;
     addEffect({type:'shell',x:u.x,y:u.y-20,tx,ty,t:0,dur:0.9,
-      onLand:()=>{ explode(tx,ty,46, u.def.dmg*(G.fac.mult.artyPower||1), u.side, true); }});
+      onLand:()=>{ explode(tx,ty,r, u.def.dmg*(G.fac.mult.artyPower||1), u.side, true); }});
   }
 
   function explode(x,y,r,dmg,side,ignoreArmor){
     addEffect({type:'explosion',x,y,t:0.5,r});
+    FX.explosion(x,y,r); FX.scorch(x,y,r*0.7); Sound.SFX.explosion(r);
     for(const e of G.units){ if(!e.alive||e.side===side) continue;
       if(Math.hypot(e.x-x,(laneY(e.lane))-y)<r){ applyDamage(e, dmg*(ignoreArmor?1:0.7), null); e.morale-=18; } }
     // damage trenches
@@ -343,7 +419,15 @@
     G.res.m-=cost.m; G.res.s-=supCost;
     G.cooldowns[unitId]= def.cd / (G.fac.spawnSpeed*(G.surge?1.8:1));
     makeUnit(unitId,'player', G.activeLane, PLAYER_HQ_X+rnd(0,18));
+    if(def.flags.squad){ for(let i=1;i<def.flags.squad;i++) makeUnit(unitId,'player',G.activeLane,PLAYER_HQ_X+rnd(0,18)); }
     if(def.flags.isTank) G.tankResearched=true; // fielding armour cures tank-fear
+    Sound.SFX.click();
+    if(def.flags.officer){ // officers call faction reinforcements on deploy
+      const base=G.fac.roster[0];
+      makeUnit(base,'player',G.activeLane,PLAYER_HQ_X+20);
+      makeUnit(base,'player',G.activeLane,PLAYER_HQ_X+34);
+      banner('OFFICER DEPLOYED','Reinforcements rally to the officer — morale aura active.');
+    }
     if(def.flags.isEngineer) speakFaction('engineer');
     else if(def.role==='assault') speakFaction('advance');
     return true;
@@ -381,10 +465,16 @@
   }
 
   function navalStrike(){
+    // shore batteries can intercept some incoming fire
+    if(G.shoreBatteries>0 && Math.random()<0.25*G.shoreBatteries){ speak(null,'Shore battery answers the fleet!'); return; }
     const lane=rint(0,NLANES-1);
     const x=rnd(W*0.12,W*0.4);
-    explode(x, laneY(lane), 60, 40, 'enemy', true);
+    explode(x, laneY(lane), 70, 46, 'enemy', true);   // bigger naval shells
+    FX.shakeNow(15); FX.flashNow(0.3,'180,200,255'); G.navalFlash=0.3;   // muzzle-flash the ships
     addEffect({type:'naval',x,y:laneY(lane),t:0.6});
+    // incoming shell whistle from the sea
+    addEffect({type:'shell',x:W*0.92,y:TOP+30,tx:x,ty:laneY(lane),t:0,dur:0.5,onLand:()=>{}});
+    Sound.SFX.naval();
     speak(null,'⚓ Naval shells incoming!');
   }
 
@@ -393,8 +483,8 @@
     if(!G||G.over||G.charge<G.chargeMax) return false;
     G.charge=0;
     const id=G.fac.ability.id;
-    speakFaction('ability');
-    addEffect({type:'flash',t:0.4});
+    speakFaction('ability'); Sound.SFX.shout();
+    addEffect({type:'flash',t:0.4}); FX.flashNow(0.4); FX.shakeNow(6);
     switch(id){
       case 'industrial_surge':
         G.surge=10; G.res.m+=30; G.res.s+=20;
@@ -452,6 +542,9 @@
       case 'cohesionDrop': G.meters.cohesion=Math.max(0,G.meters.cohesion-25); for(const u of G.units)if(u.side==='player'&&u.def.flags.multiethnic)u.morale-=20; break;
       case 'sabotage': G.hqEnemy=Math.max(0,G.hqEnemy-14); break;
       case 'enemyMoraleDrop': for(const u of G.units)if(u.side==='enemy')u.morale-=25; break;
+      case 'frozen': G.frozenT=10; G.weather='snow'; G.weatherT=12; break;
+      case 'amphibious': for(let i=0;i<Math.round(5*G.diff.enemySize);i++) makeUnit(pick(G.camp.enemies),'enemy',rint(0,NLANES-1),W*0.78-rnd(0,20)); FX.shakeNow(8); break;
+      case 'supplyCut': G.res.s=Math.max(0,G.res.s-30); G.res.m=Math.max(0,G.res.m-10); break;
     }
   }
 
@@ -472,11 +565,27 @@
   function trenchLevelAt(u){ const t=ownTrench(u); return t?t.level:1; }
 
   function buildAction(type){
-    // spend supply to upgrade active-lane player trench / wire
+    // spend supply to upgrade active-lane player trench / wire / shore battery
     if(!G||G.over) return;
     const tr=G.trenches.find(t=>t.side==='player'&&t.lane===G.activeLane);
-    if(type==='trench'){ if(G.res.s>=10 && tr.level<4){ G.res.s-=10; tr.level++; tr.hp=100; speakFaction('engineer'); } }
-    if(type==='wire'){ if(G.res.s>=6){ G.res.s-=6; tr.wire=true; } }
+    if(type==='trench'){ if(G.res.s>=10 && tr.level<4){ G.res.s-=10; tr.level++; tr.hp=100; speakFaction('engineer'); Sound.SFX.click(); } }
+    if(type==='wire'){ if(G.res.s>=6){ G.res.s-=6; tr.wire=true; Sound.SFX.click(); } }
+    if(type==='shore'){ if(G.res.s>=14){ G.res.s-=14; G.shoreBatteries++; banner('SHORE BATTERY','Coastal gun emplaced — it will answer the fleet.'); Sound.SFX.click(); } }
+  }
+
+  // ---------------------------------------------------------------- manual artillery control mode
+  function toggleArtyMode(){ if(!G||G.over) return; G.artyMode=!G.artyMode; if(G.artyMode) banner('ARTILLERY CONTROL','Aim with the mouse · click to fire · watch the cooldown.'); }
+  function setArtyAim(x,y){ if(G) G.artyAim={x,y}; }
+  function fireArty(){
+    if(!G||G.over||!G.artyMode) return false;
+    if(G.artyCd>0){ hud.onDenied&&hud.onDenied('Battery reloading'); return false; }
+    if(G.res.s<14){ hud.onDenied&&hud.onDenied('Insufficient supply'); return false; }
+    G.res.s-=14; G.artyCd=6;
+    const {x,y}=G.artyAim;
+    Sound.SFX.artillery(); FX.popup(PLAYER_HQ_X+20,H*0.4,'FIRE!','255,210,130');
+    for(let i=0;i<3;i++){ const tx=x+rnd(-26,26), ty=y+rnd(-12,12);
+      addEffect({type:'shell',x:PLAYER_HQ_X+20,y:H*0.35,tx,ty,t:0,dur:0.7,onLand:()=>explode(tx,ty,50,34,'player',true)}); }
+    return true;
   }
 
   // ---------------------------------------------------------------- orders
@@ -514,6 +623,8 @@
   // ---------------------------------------------------------------- end
   function endGame(won){
     if(G.over)return; G.over=true; G.won=won;
+    Sound.setRumble(false); Sound.stopMusic(); Sound.stopAmbience();
+    if(won) Sound.SFX.victory(); else Sound.SFX.defeat();
     hud.onEnd && hud.onEnd({won, stats:G.stats, camp:G.camp, time:Math.round(G.elapsed)});
   }
 
@@ -525,7 +636,9 @@
       meters:G.meters, weather:G.weather, activeLane:G.activeLane,
       order:G.order, cooldowns:G.cooldowns, fac:G.fac, camp:G.camp,
       paused:G.paused, units:G.units.length,
-      tankResearched:G.tankResearched };
+      tankResearched:G.tankResearched,
+      artyMode:G.artyMode, artyCd:Math.max(0,G.artyCd), shoreBatteries:G.shoreBatteries,
+      frozen:G.frozenT>0 };
   }
 
   /* =====================================================================
@@ -534,16 +647,23 @@
   function render(){
     if(!G){ ctx.fillStyle='#111'; ctx.fillRect(0,0,W,H); return; }
     const th=G.theme;
-    // sky / backdrop
-    ctx.fillStyle=th.sky; ctx.fillRect(0,0,W,TOP);
+    ctx.fillStyle='#0a0805'; ctx.fillRect(0,0,W,H);     // backdrop (covers shake gaps)
+    const sh=FX.shakeOffset(); ctx.save(); ctx.translate(sh.x,sh.y);
+    // sky / backdrop (overscanned for shake)
+    ctx.fillStyle=th.sky; ctx.fillRect(-24,-24,W+48,TOP+24);
     // ground
-    ctx.fillStyle=th.ground; ctx.fillRect(0,TOP,W,H-TOP);
+    ctx.fillStyle=th.ground; ctx.fillRect(-24,TOP,W+48,H-TOP+24);
     // Gallipoli: sea on the enemy (right) side + beach
     if(G.camp.theme==='beach'){
       ctx.fillStyle='#2f6f9e'; ctx.fillRect(W*0.66,TOP,W*0.34,H-TOP);
       ctx.fillStyle='#3a82b4'; for(let i=0;i<6;i++){ctx.fillRect(W*0.66, TOP+i*18+ (G.time*10%18), W*0.34, 3);}
-      // landing boats
-      for(let l=0;l<NLANES;l++){ ctx.fillStyle='#3a2c1c'; ctx.fillRect(W*0.78, laneY(l)-6, 26,8); }
+      // off-shore battle fleet shelling the coast (kept in the lower sea, clear of the HUD)
+      const flash = G.navalFlash>0;
+      S.drawWarship(ctx, W*0.70, H*0.50, 2.0, flash);
+      S.drawWarship(ctx, W*0.80, H*0.66, 1.7, flash);
+      S.drawWarship(ctx, W*0.72, H*0.82, 1.7, flash && Math.random()<0.7);
+      // landing boats running onto the shingle
+      for(let l=0;l<NLANES;l++){ ctx.fillStyle='#2a2018'; ctx.fillRect(W*0.78, laneY(l)-6, 26,8); ctx.fillStyle='#3a2c1c'; ctx.fillRect(W*0.78, laneY(l)-1,26,2); }
     }
     // ground texture rows
     ctx.fillStyle=th.ground2;
@@ -575,8 +695,17 @@
     S.drawFlag(ctx, PLAYER_HQ_X, TOP+30, G.fac.nation);
     if(G.fac.nation==='ottoman') S.drawOttomanCrescent(ctx, PLAYER_HQ_X, TOP+30);
     S.drawFlag(ctx, ENEMY_HQ_X, TOP+30, G.camp.enemyNation||'british');
-    // HQ bunkers
-    ctx.fillStyle='#3a3026'; ctx.fillRect(PLAYER_HQ_X-16,TOP+34,30,H-TOP-40);
+    // HQ bunkers — steel pillboxes on coastal/naval fronts, earthworks elsewhere
+    const coastal = G.camp.rules.naval || G.camp.rules.coastalArty || G.camp.theme==='beach';
+    if(coastal){
+      S.drawBunker(ctx, PLAYER_HQ_X-18, TOP+34, 34, H-TOP-40);
+      // steel strongpoints studded down the player's line (manned by poor infantry)
+      for(let l=0;l<NLANES;l+=2) S.drawBunker(ctx, PLAYER_TRENCH-20, laneY(l)-2, 40, 26);
+      // shore batteries the player has built
+      for(let i=0;i<(G.shoreBatteries||0)&&i<4;i++) S.drawBunker(ctx, PLAYER_HQ_X+18+i*16, BOT-26, 16, 22);
+    } else {
+      ctx.fillStyle='#3a3026'; ctx.fillRect(PLAYER_HQ_X-16,TOP+34,30,H-TOP-40);
+    }
     ctx.fillStyle='#332a20'; ctx.fillRect(ENEMY_HQ_X-14,TOP+34,30,H-TOP-40);
 
     // corpses
@@ -589,28 +718,63 @@
     // effects
     for(const e of G.effects) drawEffect(e);
 
-    // weather overlays
-    drawWeather();
+    // particle layer (world space, shaken)
+    FX.drawWorld(ctx);
+
+    ctx.restore();   // end shake transform
+
+    // weather (screen space)
+    FX.drawWeather(ctx, G.weather, W, H, G.time);
+
+    // dynamic battlefield lighting from barrages / naval guns
+    if(FX.light>0){ ctx.fillStyle='rgba('+FX.flashCol+','+(FX.light*0.16)+')'; ctx.fillRect(0,0,W,H); }
+    if(FX.flash>0){ ctx.fillStyle='rgba('+FX.flashCol+','+(FX.flash*0.45)+')'; ctx.fillRect(0,0,W,H); }
+
+    // manual artillery aim overlay
+    if(G.artyMode) drawArtyOverlay();
 
     // top status strip
     drawTopStrip();
   }
 
+  function drawArtyOverlay(){
+    const a=G.artyAim, ready=G.artyCd<=0;
+    // trajectory arc from player battery to aim point
+    ctx.strokeStyle = ready?'rgba(255,210,120,0.8)':'rgba(255,120,90,0.6)'; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let p=0;p<=1;p+=0.05){ const x=PLAYER_HQ_X+20+(a.x-(PLAYER_HQ_X+20))*p; const y=H*0.35+(a.y-H*0.35)*p - Math.sin(p*Math.PI)*120;
+      p===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+    ctx.stroke();
+    // impact radius preview
+    ctx.strokeStyle = ready?'rgba(255,210,120,0.9)':'rgba(255,120,90,0.7)';
+    ctx.beginPath(); ctx.arc(a.x,a.y,50,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(a.x-8,a.y); ctx.lineTo(a.x+8,a.y); ctx.moveTo(a.x,a.y-8); ctx.lineTo(a.x,a.y+8); ctx.stroke();
+    ctx.fillStyle='#ffe9b0'; ctx.font='11px monospace'; ctx.textAlign='center';
+    ctx.fillText(ready?'ARTILLERY READY — click to fire':('RELOADING '+G.artyCd.toFixed(1)+'s'), a.x, a.y-58); ctx.textAlign='left';
+  }
+
   function drawUnit(u){
     const y=u.y, scale=SS;
+    // dynamic ground shadow
+    S.drawShadow(ctx, u.x, y+2, u.def.flags.isTank?28:u.def.flags.isCamel?18:13);
     // selection of sprite by kind
     if(u.def.flags.isTank){
-      S.drawTank(ctx, u.x - (u.facing>0? 0: S.drawTank.size(scale,u.def.flags.tankType).w), y - 16*scale, {s:scale, facing:u.facing, type:u.def.flags.tankType});
+      const tw=S.drawTank.size(scale,u.def.flags.tankType).w;
+      S.drawTank(ctx, u.x - (u.facing>0? 0: tw), y - 16*scale, {s:scale, facing:u.facing, type:u.def.flags.tankType, tread:u.tread||0});
     } else if(u.def.flags.vehicle){
-      S.drawTank(ctx, u.x, y-16*scale, {s:scale-0.5<1?1:scale, facing:u.facing, type:'ft'});
+      S.drawTank(ctx, u.x - (u.facing>0?0:18*scale), y-16*scale, {s:scale, facing:u.facing, type:'ft', tread:u.tread||0});
     } else if(u.def.flags.isCamel){
       S.drawCamel(ctx, u.x-9*scale, y-20*scale, {s:scale, facing:u.facing, nation:u.nation});
     } else {
       S.drawSoldier(ctx, u.x-8*scale, y-21*scale, {
         s:scale, nation:u.nation, facing:u.facing,
-        helmet:u.def.helmet, ragged:u.def.flags.ragged,
+        helmet:u.def.helmet, ragged:u.def.flags.ragged, weapon:u.def.weapon,
+        officer:u.def.flags.officer,
         pose: u.routing?'walk':u.pose, t:u.animT });
+      // flamethrower jet while firing
+      if(u.def.flags.flame && u.pose==='fire'){ const dir=u.facing; for(let k=0;k<2;k++) FX.flame(u.x+dir*(14+k*9), y-12*scale, dir); }
     }
+    if(u.burning>0){ FX.burning(u.x, y-12*scale); }
     // health/morale micro-bars
     const bx=u.x-12, by=y-21*scale-6;
     ctx.fillStyle='#000'; ctx.fillRect(bx,by,24,3);
@@ -668,8 +832,10 @@
   // ---------------------------------------------------------------- public
   global.Engine = {
     init, start, spawnUnit, fireAbility, buildAction, setOrder, selectLane, togglePause,
+    toggleArtyMode, setArtyAim, fireArty,
     get state(){ return G; }, W, H, NLANES,
-    laneFromY:(y)=>clamp(Math.floor((y-TOP)/laneH),0,NLANES-1)
+    laneFromY:(y)=>clamp(Math.floor((y-TOP)/laneH),0,NLANES-1),
+    fromScreen:(nx,ny)=>({x:nx*W, y:ny*H})
   };
 
 })(window);

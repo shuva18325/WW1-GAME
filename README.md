@@ -6,9 +6,11 @@ A WW1 **campaign-style real-time strategy game** where you are a **commander / g
 
 ![The Central Powers — loading screen](assets/loading.png)
 
-## ▶ Play
-Open **`index.html`** in any modern browser (Chrome, Firefox, Edge, Safari).
-The first screen is the **Central Powers leaders + flags** loading screen → main menu → **choose a front** → pick a difficulty → command.
+## ▶ Play it now (no install)
+**▶ [Play in your browser](https://raw.githack.com/shuva18325/WW1-GAME/claude/ww1-central-powers-game-skaf1l/index.html)** — runs the latest commit on this branch directly, nothing to set up.
+
+Or open **`index.html`** locally in any modern browser (Chrome, Firefox, Edge, Safari).
+The first screen is an **opening cinematic** → **Central Powers leaders + flags** loading screen → main menu → **choose a front** → pick a difficulty → command.
 
 ## 🗺 Fronts (campaigns)
 | Front | Faction | Mode | Signature |
@@ -37,9 +39,14 @@ Every faction, unit, campaign and event is a **data-driven table** in [`js/data.
 ## 🖼 Art
 Procedural **chunky pixel-art**, re-coloured & re-helmeted per nationality (Stahlhelm / fez / kabalak / Brodie / Adrian / keffiyeh), matching the reference soldier, battle scene, and tank. Gallipoli swaps the trench mud for a beach-and-sea map with landing boats.
 
-| Western Front (trench mud) | Gallipoli (beach + sea) |
+| Western Front (trench mud) | Gallipoli (steel bunkers + fleet) |
 |---|---|
 | ![Western Front](screenshots/western_front.png) | ![Gallipoli](screenshots/gallipoli.png) |
+| Black Sea Naval Clash | Caucasus Winter Offensive |
+| ![Black Sea](screenshots/black_sea.png) | ![Caucasus Winter](screenshots/caucasus_winter.png) |
+
+### v2 upgrades
+Particle FX & **screen shake** · per-weapon muzzle flashes + onomatopoeia (rifle "bang", MG "BRRRRT", arty "BAAANG!", tank "KRAA-THOOM!") · **flamethrower** with burning · animated tank treads/dust/sparks · upgraded explosions · weather animations · dynamic barrage/naval lighting · **procedural Web Audio** (weapons, ambience, rumble, march music, mute) · **deployable Officers** (morale aura, mini-barrage, reinforcements) · **manual Artillery aim mode** (trajectory + impact preview) · **naval bombardment + offshore warships + steel bunkers + shore batteries** · 4 new campaigns (Caucasus Winter, Eastern Balkans, Arabian Desert Storm, Black Sea) · 20+ new units · **opening cinematic** + animated menu · victory/defeat cutscenes + **achievement medals**.
 
 ## 📚 Design documents
 - **[`PLANNING.md`](PLANNING.md)** — Section 1: the full planning section (core fantasy, visual identity, tone, campaign/difficulty/progression structure, tech trees, 28 mechanics, 26 events, 28 unit ideas, per-faction deep-dives).

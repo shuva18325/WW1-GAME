@@ -46,13 +46,20 @@
     const facing = opts.facing||1;
     const t = opts.t||0;
 
+    const weapon = opts.weapon || (helmet==='keffiyeh'?'rifle':'rifle');
+    const officer = !!opts.officer;
+
     ctx.save();
     ctx.translate(px, py);
     if (facing < 0){ ctx.scale(-1,1); }      // mirror enemies / direction
-    ctx.translate(0,0);
+    const bob = pose==='idle' ? Math.round(Math.sin(t*0.2))*s*0.0 + (Math.sin(t*0.2)>0?0:0) : 0;
+    ctx.translate(0, pose==='idle' ? Math.round(Math.sin(t*0.18))*1 : 0);  // subtle idle breathe
 
     const legSwing = pose==='walk' ? Math.round(Math.sin(t*0.4))*1 : 0;
     const recoil   = pose==='fire' ? 1 : 0;
+
+    // officer cape (drawn behind everything)
+    if(officer){ B(ctx, 1, 6, 5, 12, p.accent||'#3a2c1c', s); B(ctx, 1, 6, 5, 1, '#ffffff14', s); B(ctx, 1, 16, 5, 2, '#00000033', s); }
 
     // backpack (behind torso, toward the back = left side when facing right)
     B(ctx, 2, 7, 4, 7, p.pack, s);
@@ -120,19 +127,89 @@
         B(ctx, 9, 3, 2, 1, p.helmet, s);    // peak
     }
 
-    // arms + rifle (rifle is long, horizontal, pointing forward)
+    // officer medals on chest
+    if(officer){ B(ctx,6,8,1,1,'#c9a23a',s); B(ctx,8,8,1,1,'#cfcaba',s); B(ctx,6,10,1,1,'#9e2b25',s); }
+
+    // command gesture: raised arm (officer pose 'command')
+    if(officer && pose==='command'){ B(ctx,8,3,2,6,p.uniform,s); B(ctx,8,2,2,1,p.skin,s); ctx.restore(); return; }
+
+    // arms + weapon
     const ry = 10 - recoil;
     B(ctx, 9, 9, 3, 3, p.uniform, s);        // forward arm
     B(ctx, 8, 9, 2, 3, p.uni2, s);           // rear arm
-    B(ctx, 9, ry, 6, 1, '#7d7468', s);       // barrel
-    B(ctx, 14-recoil, ry, 1, 1, '#3a342c', s);// muzzle
-    B(ctx, 8, ry, 2, 2, '#4a3a26', s);       // wooden stock at body
-    if (pose==='fire'){ // muzzle flash
-      B(ctx, 15-recoil, ry-1, 2, 3, '#ffd24a', s);
-      B(ctx, 16-recoil, ry, 1, 1, '#fff3b0', s);
+    const flash = pose==='fire';
+    switch(weapon){
+      case 'mg':
+        B(ctx, 8, ry, 9, 1, '#6a625a', s);     // long heavy barrel
+        B(ctx, 12, ry+1, 1, 3, '#3a342c', s);  // bipod leg
+        B(ctx, 8, ry, 3, 2, '#4a3a26', s);     // receiver
+        if(flash){ B(ctx,14,ry-1,4,3,'#ffd24a',s); B(ctx,17,ry,2,1,'#fff3b0',s); B(ctx,12,ry,4,1,'#ff8a3a',s); }
+        break;
+      case 'flame':
+        B(ctx, 9, ry, 5, 2, '#444', s);        // nozzle body
+        B(ctx, 14-recoil, ry, 2, 2, '#2a2a2a', s);
+        B(ctx, 3, 6, 2, 6, '#7a2a1a', s);      // fuel tank on pack
+        break;
+      case 'smg':
+        B(ctx, 9, ry, 4, 1, '#5a544c', s);
+        B(ctx, 10, ry+1, 1, 2, '#3a342c', s);  // magazine
+        B(ctx, 8, ry, 2, 2, '#3a342c', s);
+        if(flash){ B(ctx,12-recoil,ry-1,2,3,'#ffd24a',s); }
+        break;
+      case 'shotgun':
+        B(ctx, 9, ry, 4, 2, '#5a4a36', s);
+        if(flash){ B(ctx,12-recoil,ry-1,3,4,'#ffd24a',s); B(ctx,14-recoil,ry,2,2,'#fff3b0',s); }
+        break;
+      case 'sniper':
+        B(ctx, 9, ry, 8, 1, '#6a625a', s);
+        B(ctx, 9, ry-1, 2, 1, '#222', s);      // scope
+        B(ctx, 8, ry, 2, 2, '#3a2a18', s);
+        if(flash){ B(ctx,16-recoil,ry-1,2,2,'#ffd24a',s); }
+        break;
+      default: // rifle
+        B(ctx, 9, ry, 6, 1, '#7d7468', s);
+        B(ctx, 14-recoil, ry, 1, 1, '#3a342c', s);
+        B(ctx, 8, ry, 2, 2, '#4a3a26', s);
+        if(flash){ B(ctx, 15-recoil, ry-1, 2, 3, '#ffd24a', s); B(ctx, 16-recoil, ry, 1, 1, '#fff3b0', s); }
     }
 
     ctx.restore();
+  }
+
+  // soft ground shadow under a unit
+  function drawShadow(ctx, x, y, w){ ctx.fillStyle='rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(x, y, w, w*0.32, 0, 0, Math.PI*2); ctx.fill(); }
+
+  // STEEL BUNKER (Gallipoli / coastal defences) — riveted armoured pillbox
+  function drawBunker(ctx, x, y, w, h){
+    ctx.fillStyle='#3a3f44'; ctx.fillRect(x, y, w, h);                 // steel body
+    ctx.fillStyle='#4a5057'; ctx.fillRect(x, y, w, Math.max(4,h*0.18));// top highlight
+    ctx.fillStyle='#23272b'; ctx.fillRect(x, y+h-6, w, 6);            // shadow base
+    ctx.fillStyle='#2a2e32'; ctx.fillRect(x+4, y+h*0.42, w-8, h*0.2); // embrasure slit
+    ctx.fillStyle='#11140f'; ctx.fillRect(x+6, y+h*0.46, w-12, h*0.1);// dark opening
+    ctx.fillStyle='#1a1c1e'; ctx.fillRect(x+w*0.42, y+h*0.47, 6, h*0.08); // MG barrel in slit
+    // rivets
+    ctx.fillStyle='#6a7077';
+    for(let rx=x+4; rx<x+w-3; rx+=10){ ctx.fillRect(rx, y+3, 2,2); ctx.fillRect(rx, y+h-9, 2,2); }
+    for(let ry=y+6; ry<y+h-8; ry+=10){ ctx.fillRect(x+2, ry, 2,2); ctx.fillRect(x+w-4, ry, 2,2); }
+    // sandbag skirt at the foot
+    ctx.fillStyle='#7c6a44'; for(let i=0;i<w;i+=10){ ctx.fillRect(x+i, y+h-4, 8, 5); }
+  }
+
+  // off-shore WARSHIP silhouette (naval bombardment). flash>0 lights the guns.
+  function drawWarship(ctx, x, y, s, flash){
+    const hull='#4a525a', dk='#333a40', lt='#5e6770';
+    ctx.fillStyle=dk; ctx.fillRect(x, y+10*s, 64*s, 7*s);            // hull
+    ctx.fillStyle=hull; ctx.fillRect(x+4*s, y+6*s, 56*s, 6*s);        // deck
+    ctx.fillStyle=lt; ctx.fillRect(x+4*s, y+6*s, 56*s, s);
+    ctx.fillStyle=hull; ctx.fillRect(x+22*s, y+2*s, 18*s, 5*s);       // superstructure
+    ctx.fillStyle=dk; ctx.fillRect(x+27*s, y-3*s, 4*s, 6*s);          // mast/funnel
+    ctx.fillStyle=dk; ctx.fillRect(x+34*s, y-1*s, 4*s, 5*s);          // funnel 2
+    // main gun turrets
+    ctx.fillStyle='#2a2e32'; ctx.fillRect(x+10*s, y+4*s, 8*s, 4*s); ctx.fillRect(x+44*s, y+4*s, 8*s, 4*s);
+    ctx.fillStyle='#1c1f22'; ctx.fillRect(x+4*s, y+5*s, 8*s, 2*s); ctx.fillRect(x+52*s, y+5*s, 8*s, 2*s); // barrels
+    if(flash){ ctx.fillStyle='#ffd24a'; ctx.fillRect(x-2*s, y+4*s, 8*s, 4*s); ctx.fillStyle='#fff3b0'; ctx.fillRect(x-3*s, y+5*s, 4*s, 2*s); }
+    // waterline
+    ctx.fillStyle='rgba(20,40,60,0.5)'; ctx.fillRect(x, y+17*s, 64*s, 3*s);
   }
 
   // approximate footprint so callers can place/scale
@@ -200,6 +277,12 @@
       // track mud wake
       B(ctx, 0, 13, 32, 2, '#3b2c1d', s);
     }
+    // animated tread links (shift with movement phase)
+    const tw = type==='a7v'?22:type==='ft'?16:32;
+    const ty = type==='a7v'?12:type==='ft'?11:12;
+    const ph = Math.floor(opts.tread||0)%3;
+    ctx.fillStyle='#15100a';
+    for(let i=0;i<tw;i+=3){ const xx=i+ph; if(xx<tw) ctx.fillRect(xx*s, ty*s, s, 2*s); }
     ctx.restore();
   }
   drawTank.size = function(s,type){ return { w:(type==='a7v'?24:type==='ft'?18:34)*s, h:16*s }; };
@@ -265,13 +348,17 @@
     ctx.fillStyle='#2a2a2a'; ctx.fillRect(x+6,y,8,2);
   }
 
-  function drawFlag(ctx,x,y,nation){
+  function drawFlag(ctx,x,y,nation,t){
     ctx.fillStyle='#2a2018'; ctx.fillRect(x,y-26,2,30);     // pole
     const bands = FLAGS[nation]||FLAGS.german;
-    const fw=18, fh=12;
-    for(let i=0;i<bands.length;i++){
-      ctx.fillStyle=bands[i];
-      ctx.fillRect(x+2, y-26 + i*(fh/bands.length), fw, fh/bands.length);
+    const fw=18, fh=12, bh=fh/bands.length;
+    // waving flag: each vertical strip shifted by a travelling sine
+    for(let col=0; col<fw; col++){
+      const wav = t!=null ? Math.round(Math.sin(t*0.12 + col*0.5)*1.5) : 0;
+      for(let i=0;i<bands.length;i++){
+        ctx.fillStyle=bands[i];
+        ctx.fillRect(x+2+col, y-26 + i*bh + wav, 1, bh);
+      }
     }
   }
 
@@ -292,8 +379,9 @@
   }
 
   global.Sprites = {
-    PAL, FLAGS, pal, drawSoldier, drawCorpse, drawTank, drawCamel,
+    PAL, FLAGS, pal, drawSoldier, drawCorpse, drawTank, drawCamel, drawShadow,
     drawTrench, drawWire, drawCrater, drawMGNest, drawFlag, drawOttomanCrescent,
+    drawBunker, drawWarship,
     block:B
   };
 

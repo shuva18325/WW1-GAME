@@ -11,7 +11,7 @@
   // flags: isTank, isCamel, isEngineer, antitank, indirect, ambush, ragged
   const UNITS = {
     // ----- GERMANY -----
-    g_storm:      { name:'Stormtrooper',     nation:'german', role:'assault', hp:70, armor:1, dmg:9, range:150, fireRate:2.4, speed:42, morale:95, cost:{m:8,s:6}, cd:3, key:'Q', helmet:'stahlhelm', flags:{} },
+    g_storm:      { name:'Stormtrooper',     nation:'german', role:'assault', hp:70, armor:1, dmg:9, range:150, fireRate:2.4, speed:42, morale:95, cost:{m:8,s:6}, cd:3, key:'Q', helmet:'stahlhelm', weapon:'smg', flags:{} },
     g_mg:         { name:'MG Squad',         nation:'german', role:'support', hp:60, armor:0, dmg:5, range:230, fireRate:5.0, speed:20, morale:80, cost:{m:7,s:8}, cd:4, helmet:'stahlhelm', flags:{} },
     g_armoredcar: { name:'Armored Car',      nation:'german', role:'mobile',  hp:120,armor:3, dmg:7, range:180, fireRate:3.0, speed:55, morale:90, cost:{m:10,s:12}, cd:6, helmet:'stahlhelm', flags:{vehicle:true} },
     g_grenadier:  { name:'Grenadier',        nation:'german', role:'assault', hp:75, armor:1, dmg:14,range:120, fireRate:1.2, speed:36, morale:90, cost:{m:7,s:7}, cd:3, helmet:'stahlhelm', flags:{antitrench:true} },
@@ -25,7 +25,7 @@
     o_elite:      { name:'Elite Infantry',   nation:'ottoman', role:'line',   hp:95, armor:1, dmg:7, range:165, fireRate:2.0, speed:30, morale:98, cost:{m:8,s:5}, cd:3, helmet:'fez', flags:{} },
     o_camel:      { name:'Camel Infantry',   nation:'ottoman', role:'mobile', hp:85, armor:0, dmg:6, range:150, fireRate:1.8, speed:58, morale:92, cost:{m:8,s:6}, cd:4, flags:{isCamel:true} },
     o_scout:      { name:'Desert Scout',     nation:'ottoman', role:'mobile', hp:50, armor:0, dmg:4, range:160, fireRate:2.0, speed:62, morale:85, cost:{m:5,s:4}, cd:3, helmet:'kabalak', flags:{scout:true} },
-    o_mg:         { name:'MG Detachment',    nation:'ottoman', role:'support',hp:55, armor:0, dmg:5, range:225, fireRate:4.6, speed:18, morale:85, cost:{m:7,s:7}, cd:4, helmet:'kabalak', flags:{} },
+    o_mg:         { name:'MG Detachment',    nation:'ottoman', role:'support',hp:55, armor:0, dmg:5, range:225, fireRate:4.6, speed:18, morale:85, cost:{m:7,s:7}, cd:4, helmet:'kabalak', weapon:'mg', flags:{} },
     o_mortar:     { name:'Mortar Team',      nation:'ottoman', role:'arty',   hp:50, armor:0, dmg:22,range:430, fireRate:0.4, speed:14, morale:80, cost:{m:7,s:10}, cd:7, helmet:'kabalak', flags:{indirect:true} },
     o_engineer:   { name:'Engineer',         nation:'ottoman', role:'engineer',hp:60,armor:0, dmg:3, range:90,  fireRate:1.4, speed:28, morale:82, cost:{m:5,s:4}, cd:4, helmet:'kabalak', flags:{isEngineer:true} },
 
@@ -46,6 +46,36 @@
     r_ambush:     { name:'Desert Ambusher',  nation:'arab', role:'assault',  hp:55, armor:0, dmg:13,range:150, fireRate:1.6, speed:44, morale:88, cost:{m:6,s:4}, cd:4, helmet:'keffiyeh', flags:{ambush:true} },
     r_sabo:       { name:'Saboteur',         nation:'arab', role:'engineer', hp:50, armor:0, dmg:5, range:90,  fireRate:1.2, speed:48, morale:85, cost:{m:6,s:6}, cd:5, helmet:'keffiyeh', flags:{saboteur:true} },
     r_light:      { name:'Light Rifleman',   nation:'arab', role:'line',     hp:45, armor:0, dmg:6, range:170, fireRate:1.8, speed:40, morale:82, cost:{m:4,s:3}, cd:2, helmet:'keffiyeh', flags:{} },
+
+    // ===== UNIT UPGRADES (new roster additions) =====
+    // -- Germany --
+    g_flame:      { name:'Flamethrower',     nation:'german', role:'assault', hp:80, armor:1, dmg:6, range:95,  fireRate:6.0, speed:30, morale:90, cost:{m:9,s:12}, cd:6, helmet:'stahlhelm', weapon:'flame', flags:{flame:true, burn:true} },
+    g_heavystorm: { name:'Heavy Stormtroop', nation:'german', role:'assault', hp:120,armor:3, dmg:11,range:150, fireRate:2.6, speed:38, morale:96, cost:{m:12,s:10}, cd:5, helmet:'stahlhelm', weapon:'smg', flags:{} },
+    g_panzerwagen:{ name:'Panzerwagen',      nation:'german', role:'mobile',  hp:160,armor:4, dmg:8, range:190, fireRate:3.4, speed:50, morale:92, cost:{m:12,s:16}, cd:8, weapon:'mg', flags:{vehicle:true} },
+    g_mg08:       { name:'MG-08 Heavy MG',   nation:'german', role:'support', hp:70, armor:1, dmg:6, range:250, fireRate:6.5, speed:14, morale:84, cost:{m:9,s:11}, cd:5, helmet:'stahlhelm', weapon:'mg', flags:{} },
+    g_shotgun:    { name:'Trench Shotgun',   nation:'german', role:'assault', hp:85, armor:1, dmg:20,range:90,  fireRate:1.5, speed:36, morale:90, cost:{m:8,s:7}, cd:4, helmet:'stahlhelm', weapon:'shotgun', flags:{antitrench:true} },
+    g_officer:    { name:'Officer',          nation:'german', role:'officer',  hp:95, armor:1, dmg:6, range:140, fireRate:1.4, speed:30, morale:100,cost:{m:10,s:8}, cd:10, helmet:'stahlhelm', weapon:'smg', flags:{officer:true} },
+    // -- Ottoman --
+    o_eliterifle: { name:'Desert Riflemen',  nation:'ottoman', role:'line',   hp:90, armor:1, dmg:9, range:190, fireRate:1.9, speed:30, morale:96, cost:{m:8,s:5}, cd:3, helmet:'fez', weapon:'rifle', flags:{} },
+    o_camelmg:    { name:'Camel MG Platform',nation:'ottoman', role:'mobile', hp:95, armor:0, dmg:6, range:220, fireRate:4.6, speed:50, morale:90, cost:{m:10,s:9}, cd:6, weapon:'mg', flags:{isCamel:true} },
+    o_heavymortar:{ name:'Heavy Mortar',     nation:'ottoman', role:'arty',   hp:60, armor:0, dmg:34,range:480, fireRate:0.34,speed:10, morale:82, cost:{m:9,s:13}, cd:8, helmet:'kabalak', flags:{indirect:true} },
+    o_officer:    { name:'Officer (Aura)',   nation:'ottoman', role:'officer', hp:90, armor:0, dmg:5, range:140, fireRate:1.4, speed:28, morale:100,cost:{m:9,s:6}, cd:10, helmet:'fez', flags:{officer:true} },
+    o_raidercav:  { name:'Desert Raider Cav',nation:'ottoman', role:'mobile', hp:80, armor:0, dmg:12,range:130, fireRate:1.6, speed:66, morale:92, cost:{m:8,s:6}, cd:4, flags:{isCamel:true, ambush:true} },
+    // -- Austria-Hungary --
+    a_siege:      { name:'Siege Artillery',  nation:'austria', role:'arty',   hp:65, armor:0, dmg:50,range:600, fireRate:0.22,speed:6,  morale:80, cost:{m:11,s:24}, cd:11, helmet:'stahlhelm', flags:{indirect:true, siege:true} },
+    a_sharp:      { name:'Mtn Sharpshooter', nation:'austria', role:'support',hp:65, armor:1, dmg:18,range:300, fireRate:0.9, speed:28, morale:86, cost:{m:8,s:7}, cd:5, helmet:'cap', weapon:'sniper', flags:{mountain:true} },
+    a_battalion:  { name:'Mixed Battalion',  nation:'austria', role:'line',   hp:70, armor:1, dmg:6, range:155, fireRate:1.9, speed:30, morale:65, cost:{m:7,s:5}, cd:3, helmet:'stahlhelm', flags:{multiethnic:true, squad:2} },
+    a_officer:    { name:'Officer',          nation:'austria', role:'officer', hp:95, armor:1, dmg:6, range:140, fireRate:1.4, speed:30, morale:100,cost:{m:10,s:8}, cd:10, helmet:'stahlhelm', flags:{officer:true} },
+    // -- Bulgaria --
+    b_grenadier:  { name:'Mtn Grenadier',    nation:'bulgaria', role:'assault',hp:85,armor:1, dmg:16,range:110, fireRate:1.2, speed:34, morale:90, cost:{m:7,s:7}, cd:4, helmet:'cap', flags:{antitrench:true, mountain:true} },
+    b_forest:     { name:'Forest Ambusher',  nation:'bulgaria', role:'assault',hp:65,armor:0, dmg:14,range:150, fireRate:1.6, speed:42, morale:92, cost:{m:6,s:5}, cd:4, helmet:'cap', flags:{ambush:true, mountain:true} },
+    b_bunkereng:  { name:'Bunker Engineer',  nation:'bulgaria', role:'engineer',hp:75,armor:2,dmg:4, range:90,  fireRate:1.4, speed:26, morale:84, cost:{m:6,s:6}, cd:4, helmet:'cap', flags:{isEngineer:true, bunker:true} },
+    b_officer:    { name:'Officer',          nation:'bulgaria', role:'officer', hp:90, armor:1, dmg:6, range:140, fireRate:1.4, speed:30, morale:100,cost:{m:9,s:7}, cd:10, helmet:'cap', flags:{officer:true} },
+    // -- Arab Revolt --
+    r_demo:       { name:'Demolition Team',  nation:'arab', role:'engineer',  hp:55, armor:0, dmg:6, range:90,  fireRate:1.2, speed:46, morale:88, cost:{m:7,s:8}, cd:5, helmet:'keffiyeh', flags:{saboteur:true, demo:true} },
+    r_elitecav:   { name:'Camel Raider Elite',nation:'arab',role:'mobile',   hp:90, armor:0, dmg:11,range:150, fireRate:2.0, speed:66, morale:92, cost:{m:9,s:7}, cd:4, flags:{isCamel:true, ambush:true} },
+    r_sniper:     { name:'Desert Sniper',    nation:'arab', role:'support',  hp:45, armor:0, dmg:20,range:310, fireRate:0.8, speed:40, morale:85, cost:{m:7,s:6}, cd:5, helmet:'keffiyeh', weapon:'sniper', flags:{} },
+    r_hitrun:     { name:'Hit-and-Run Cav',  nation:'arab', role:'mobile',   hp:70, armor:0, dmg:9, range:140, fireRate:1.8, speed:72, morale:90, cost:{m:7,s:5}, cd:3, flags:{isCamel:true, ambush:true, hitrun:true} },
 
     // ----- ENEMY UNITS (AI) -----
     e_brit_line:  { name:'British Infantry', nation:'british', role:'line',   hp:75, armor:1, dmg:6, range:160, fireRate:1.9, speed:30, morale:80, helmet:'brodie', flags:{} },
@@ -71,7 +101,7 @@
       mult:{ routChance:0.6, engBuild:1.5, supplyCost:1.25, tankFear:true },
       ability:{ id:'industrial_surge', name:'INDUSTRIAL SURGE', charge:55,
         desc:'Production surge + free Stormtroopers + trench reinforcement' },
-      roster:['g_storm','g_mg','g_grenadier','g_elite','g_armoredcar','g_engineer','g_arty','g_tank'],
+      roster:['g_storm','g_heavystorm','g_flame','g_shotgun','g_mg08','g_grenadier','g_elite','g_panzerwagen','g_engineer','g_officer','g_arty','g_tank'],
       voice:{ spawn:['For the Empire!','We stand firm!','Jawohl, Herr General!'],
         advance:['Stormtroopers, advance!'],
         engineer:['Engineers, reinforce the trench!'],
@@ -86,7 +116,7 @@
       mult:{ routChance:0.5, defenceBonus:1.2, desertChance:1.4, moraleRegen:1.6 },
       ability:{ id:'german_support', name:'GERMAN SUPPORT', charge:70,
         desc:'Summon 1 German tank + 3 elite Stormtroopers + morale boost' },
-      roster:['o_regular','o_elite','o_camel','o_scout','o_mg','o_mortar','o_engineer'],
+      roster:['o_regular','o_elite','o_eliterifle','o_camel','o_raidercav','o_camelmg','o_scout','o_mg','o_heavymortar','o_engineer','o_officer'],
       voice:{ spawn:['Brothers, stand firm! This land is ours!','Sultan’s banner flies above us!','Stay together, kardeşlerim!','Camels ready, commander!'],
         advance:['For the Caliphate, ileri!'],
         crisis:['Allah’s strength is with us!','For the Caliphate! Hold the cliffs!'],
@@ -101,7 +131,7 @@
       mult:{ routChance:1.25, artyPower:1.3, cohesion:true },
       ability:{ id:'artillery_barrage', name:'ARTILLERY BARRAGE', charge:50,
         desc:'Heavy Skoda strike + morale boost + enemy suppression' },
-      roster:['a_mixed','a_mountain','a_arty','a_engineer'],
+      roster:['a_mixed','a_battalion','a_mountain','a_sharp','a_engineer','a_officer','a_arty','a_siege'],
       voice:{ spawn:['Our men stand united today.','For the Empire!'],
         advance:['Hold the ridge!'],
         ability:['Artillery ready, commander!'] }
@@ -114,7 +144,7 @@
       mult:{ routChance:0.8, mountainBonus:1.5, equip:0.85 },
       ability:{ id:'mountain_hold', name:'MOUNTAIN HOLD', charge:48,
         desc:'Massive defensive buff + ambush activation + damage reduction' },
-      roster:['b_mountain','b_ambush','b_rifle','b_engineer'],
+      roster:['b_mountain','b_grenadier','b_ambush','b_forest','b_rifle','b_bunkereng','b_engineer','b_officer'],
       voice:{ spawn:['For Bulgaria!','Mountains protect us — hold your ground!'],
         ambush:['Ambush ready!'],
         ability:['The mountain holds!'] }
@@ -127,7 +157,7 @@
       mult:{ routChance:0.9, mobility:1.3, ambushPower:1.4 },
       ability:{ id:'desert_raid', name:'DESERT RAID', charge:45,
         desc:'Summon raiders + sabotage enemy supply line' },
-      roster:['r_raider','r_ambush','r_sabo','r_light'],
+      roster:['r_raider','r_elitecav','r_hitrun','r_ambush','r_light','r_sniper','r_sabo','r_demo'],
       voice:{ spawn:['The desert hides us.','Strike fast, vanish faster.'],
         sabotage:['Cut their supply lines!'],
         ability:['Raiders, strike!'] }
@@ -216,6 +246,48 @@
       events:['hejaz_raid','sabotage_event','sandstorm','ottoman_morale_drop'],
       brief:'You are the raiders now. Strike the Hejaz railway, cut the supply lines, and bleed the Ottoman garrison. Appear, kill, and vanish into the desert before the counter falls.',
       intel:'Target: Ottoman supply lines · Guerrilla offence · Hit & run'
+    },
+
+    // ===== NEW CAMPAIGNS =====
+    {
+      id:'caucasus_winter', name:'Caucasus Winter Offensive', faction:'ottoman', flag:'ottoman',
+      subtitle:'Ottoman Empire vs Russia — Death in the Snow',
+      mode:'mixed', theme:'snow', difficulties:DIFFS_3, startWeather:'snow',
+      enemies:['e_russian','e_russian','e_brit_line'], enemyTank:['e_tank_rhom'], enemyNation:'russian',
+      rules:{ cold:true, horde:true, blizzard:true, frozen:true },
+      events:['blizzard','frozen_equipment','mass_assault','german_advisor','caliphate_call'],
+      brief:'Sarıkamış. Snow trenches and frozen rifles in the high passes. Russian masses come on through the blizzard while the cold itself kills more men than bullets. Endure, and let faith and mountain warfare hold the line.',
+      intel:'Enemy: Russia (waves) · Blizzards · Frozen equipment · Mountain'
+    },
+    {
+      id:'balkans', name:'Eastern Balkans Push', faction:'bulgaria', flag:'bulgaria',
+      subtitle:'Bulgaria + Germany vs Serbia & Romania',
+      mode:'offence', theme:'mountain', difficulties:DIFFS_3,
+      enemies:['e_brit_line','e_french','e_russian'], enemyNation:'french',
+      rules:{ ambush:true, mountainBonus:true, river:true },
+      events:['ambush_ready','river_crossing','mass_assault','mountain_hold_ready'],
+      brief:'Push through the mountain passes and force the river crossings. Funnel the Serbian and Romanian defenders into the chokepoints, spring ambushes from the heights, and break through with German support.',
+      intel:'Enemy: Serbia & Romania · Mountain passes · River crossings · OFFENCE'
+    },
+    {
+      id:'arabia_storm', name:'Arabian Desert Storm', faction:'ottoman', flag:'ottoman',
+      subtitle:'Ottoman Empire vs the Arab Revolt',
+      mode:'defence', theme:'desert', difficulties:DIFFS_3, startWeather:'clear',
+      enemies:['e_arab_raid','e_arab_raid','e_anzac'], enemyNation:'arab',
+      rules:{ heat:true, guerrilla:true, sabotage:true, supplyAttack:true },
+      events:['sandstorm','supply_sabotage','heat_wave','german_advisor','ottoman_morale_drop'],
+      brief:'Now you defend the line the raiders hunt. Camel raiders strike from the dunes, saboteurs blow your depots, and the heat saps every man off-supply. Hold the garrison together against the guerrilla storm.',
+      intel:'Enemy: Arab raiders · Sabotage · Heat exhaustion · DEFENCE'
+    },
+    {
+      id:'blacksea', name:'Black Sea Naval Clash', faction:'ottoman', flag:'ottoman',
+      subtitle:'Ottoman Coast vs the Russian Fleet',
+      mode:'defence', theme:'beach', difficulties:DIFFS_3,
+      enemies:['e_russian','e_russian','e_brit_line'], enemyNation:'russian',
+      rules:{ naval:true, amphibious:true, coastalArty:true },
+      events:['naval_bombardment','amphibious_landing','mass_assault','caliphate_call'],
+      brief:'The Russian fleet shells the coast and lands marines on the shingle. Build shore batteries and bunkers, weather the naval guns, and throw every amphibious landing back into the Black Sea.',
+      intel:'Enemy: Russian navy · Naval bombardment · Amphibious landings · DEFENCE'
     }
   ];
 
@@ -253,7 +325,11 @@
     mountain_hold_ready:{ title:'THE MOUNTAIN WAITS', text:'Positions sited, fields of fire cleared.', voice:'Mountains protect us — hold your ground!', effect:'chargeAbility' },
     hejaz_raid:        { title:'HEJAZ RAILWAY', text:'The railway lies ahead — blow the tracks!', voice:'Cut their supply lines!', effect:'sabotage' },
     sabotage_event:    { title:'SABOTAGE', text:'Charges set on the enemy depot.', voice:'Strike fast, vanish faster.', effect:'sabotage' },
-    ottoman_morale_drop:{ title:'GARRISON SHAKEN', text:'The raids have broken the garrison’s nerve.', voice:'The desert hides us.', effect:'enemyMoraleDrop' }
+    ottoman_morale_drop:{ title:'GARRISON SHAKEN', text:'The raids have broken the garrison’s nerve.', voice:'The desert hides us.', effect:'enemyMoraleDrop' },
+    frozen_equipment:  { title:'FROZEN EQUIPMENT', text:'Rifle bolts freeze solid; rate of fire collapses in the cold.', voice:'Keep the bolts moving — don’t let them freeze!', effect:'frozen' },
+    river_crossing:    { title:'RIVER CROSSING', text:'The enemy fords the river and presses the bank!', voice:'Hold the bank — they cross!', effect:'wave' },
+    amphibious_landing:{ title:'AMPHIBIOUS LANDING', text:'Boats hit the shingle — infantry pour onto the beach!', voice:'They land! To the shore!', effect:'amphibious' },
+    supply_sabotage:   { title:'SUPPLY SABOTAGED', text:'Charges blow the depot — supplies lost.', voice:'Our supplies — sabotaged!', effect:'supplyCut' }
   };
 
   global.GameData = { UNITS, FACTIONS, CAMPAIGNS, DIFFICULTY, EVENTS, DIFFS_FULL, DIFFS_3 };

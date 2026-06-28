@@ -498,4 +498,65 @@ In-battle and inter-mission events that fire on triggers (timers, meters, casual
 
 ---
 
+---
+
+## 27. ADDENDUM — AESTHETIC, AUDIO & SYSTEMS UPGRADE PACK (v2)
+
+This addendum extends the visual, audio, and gameplay sections above with the upgrade pass now implemented in the build.
+
+### 27.1 Aesthetic & visual upgrades (extends §2)
+- **Higher shading depth & dynamic shadows.** Every unit now casts a soft ground shadow; sprites carry extra value steps.
+- **Animated idle poses.** Units "breathe" on a subtle 1px bob when idle; walk/fire/reload/command poses are distinct.
+- **Per-weapon muzzle flashes + onomatopoeia popups** floating over the firer:
+  - Rifle → "bang bang", sharp short flash.
+  - Machine gun → "BRRRRT BRRRRT", rapid flashes + **barrel heat glow**.
+  - Artillery → "BAAANG!" (siege: "BA-BOOOM!"), big smoke + spark burst.
+  - Tank cannon → "KRAA-THOOM!", large flash + screen shake + light flash.
+- **Flamethrower unit (Germany)** with animated **flame particles, smoke trails, and a burning damage-over-time** effect on victims.
+- **Tank treads animated** (shifting track links), **dust clouds when moving**, and **sparks when rounds ricochet off armour**.
+- **Upgraded explosions:** shockwave **rings**, **debris** particles, **smoke**, ground **scorch decals**, and **screen shake**.
+- **Weather animations:** rain (streaks + darkening), fog (drifting bands), sandstorm (driven sand), snow/blizzard (falling flakes), gas (green haze).
+- **Dynamic lighting** during artillery barrages and naval bombardments (lingering battlefield glow + flash tint).
+- **Officer units** with **capes, medals, and a raised-arm command gesture** when calling a fire mission.
+- **Steel bunkers** (riveted armoured pillboxes with embrasure slits + sandbag skirts) on Gallipoli & coastal fronts; **off-shore warship silhouettes** that flash when the fleet fires.
+- **Waving animated flags** for each faction.
+
+### 27.2 Sound design upgrades (new audio section)
+All audio is **synthesized at runtime via the Web Audio API** (no external assets), so it ships in a single static page. Voice acting is **specced** (English lines flavoured by each faction's accent/culture) and represented in-engine by on-screen officer shouts + synth stingers; real recorded VO is the natural next content drop.
+- **Weapon sounds:** rifles = sharp cracks · MGs = rattling bursts · artillery = deep concussive booms · flamethrower = roaring jet · tanks = engine rumble + metallic clanks + cannon boom.
+- **Environmental ambience** per theme: trench wind, desert wind, mountain/sea air (filtered-noise wind beds with slow LFO swell).
+- **Tank engine rumble** loops while armour is on the field.
+- **Officer shouts** on ability activation and fire missions.
+- **Faction culture cues** (designed): Ottoman morale chants (respectful, historical Caliphate-era tone), German stormtrooper battle cries, Bulgarian mountain echoes, Austro-Hungarian artillery commands.
+- **March music loop** (drums + horn motif) on menu/intro/battle, with a **mute toggle** (🔊/🔇, hotkey **M**).
+
+### 27.3 Gameplay upgrades (extends §15)
+- **Deployable Officer system:** officers project a **morale aura**, call a **mini-barrage** on cooldown, and **call reinforcements** on deploy (faction-specific basic troops).
+- **Naval Attack system (coastal fronts):** the fleet shells the shore on telegraphed timers with **massive shockwaves + screen shake**; the player builds **shore batteries / steel bunkers** that intercept a share of incoming fire and anchor the line; **amphibious landings** drop enemy troops directly on the beach.
+- **Pixel-art Artillery Control mode (T):** enter aim mode, move the mouse to place fire, see a **trajectory arc + impact-radius preview**, click to fire, governed by a **cooldown**.
+- **Frozen-equipment** (winter): rate of fire halved while the cold snap lasts.
+
+### 27.4 New campaigns (extends §4)
+- **Caucasus Winter Offensive** — Ottomans vs Russians; snow trenches, frozen equipment, blizzards, mountain warfare, human waves.
+- **Eastern Balkans Push** — Bulgaria + Germany vs Serbia & Romania; mountain passes, river crossings, ambush, offence.
+- **Arabian Desert Storm** — Ottomans defending vs the Arab Revolt; guerrilla ambushes, camel raids, supply sabotage, heat exhaustion.
+- **Black Sea Naval Clash** — Ottoman coast vs the Russian fleet; coastal artillery, ship bombardments, amphibious landings.
+
+### 27.5 New units (extends §17)
+- **Germany:** Flamethrower · Heavy Stormtrooper · Panzerwagen · MG-08 Heavy MG · Trench Shotgun · Officer.
+- **Ottoman:** Desert Riflemen (elite) · Camel MG Platform · Heavy Mortar · Officer (morale aura) · Desert Raider Cavalry.
+- **Austria-Hungary:** Siege Artillery · Mountain Sharpshooter · Mixed Battalion (morale variance) · Officer.
+- **Bulgaria:** Mountain Grenadier · Forest Ambusher · Defensive Bunker Engineer · Officer.
+- **Arab Revolt:** Saboteur Demolition Team · Camel Raider Elite · Desert Sniper · Hit-and-Run Cavalry.
+
+### 27.6 Special-effects & animation checklist (implemented)
+Rifle recoil · MG barrel heat glow · animated tank treads · flamethrower flame physics · artillery smoke trails · shell-impact craters/scorch · animated faction flags · officer command gesture · idle breathing · unit shadows · ricochet sparks · burning units.
+
+### 27.7 Epic intro & starting menu (new)
+- **Opening cinematic:** a pixel-art map of Europe **zooms in**, the **Central Powers flags rise**, drums sound, and the voiceover reads **"The world is at war. Command your empire. Shape history."** (skippable).
+- **Animated main menu:** parallax background of trenches, mountains and horizon muzzle-flashes; the four leaders fade in; march music plays.
+
+### 27.8 Final polish (new)
+Metallic WW1 UI frame styling · faction-coloured menu accents · animated campaign/aftermath transitions · **victory & defeat cutscenes** with faction-flavoured summaries · **pixel-art achievement medals** · difficulty-scaled economy & enemy AI · epic end-of-campaign stat summaries.
+
 *End of Section 1 — Full Planning Section. Section 2 (the game design document) follows in `GAME_DESIGN.md`, and the playable prototype lives in `index.html` + `js/`.*

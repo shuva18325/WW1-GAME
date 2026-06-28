@@ -106,7 +106,9 @@
   }
 
   function buildDifficulty(c){
+    const fac=D.FACTIONS[c.faction];
     $('diffTitle').textContent=c.name;
+    $('diffTitle').style.color = fac.color || '#e8dcc0';
     $('diffSub').textContent=c.subtitle;
     $('diffBrief').textContent=c.brief;
     const list=$('diffList'); list.innerHTML='';
@@ -154,6 +156,12 @@
     t.onclick=()=>Engine.buildAction('trench'); deck.appendChild(t);
     const w=el('div','card build'); w.innerHTML=`<div class="hk">W</div><div class="nm">Lay Wire</div><div class="co">⛽6</div>`;
     w.onclick=()=>Engine.buildAction('wire'); deck.appendChild(w);
+    // shore battery for naval / coastal fronts
+    if(camp && (camp.rules.naval || camp.rules.coastalArty)){
+      const sb=el('div','card build'); sb.style.borderColor='#2e5a7a';
+      sb.innerHTML=`<div class="hk">B</div><div class="nm">Shore Battery</div><div class="co">⛽14</div>`;
+      sb.onclick=()=>Engine.buildAction('shore'); deck.appendChild(sb);
+    }
   }
 
   function buildOrders(){
@@ -167,6 +175,10 @@
     for(let i=0;i<Engine.NLANES;i++){ const lb=el('div','lane-b',(i+1)); lb.dataset.lane=i; if(i===2)lb.classList.add('active');
       lb.onclick=()=>selLane(i); lanes.appendChild(lb); }
     o.appendChild(lanes);
+    // manual artillery control toggle
+    const art=el('div','ord arty','🎯 Artillery (T)'); art.id='artyBtn';
+    art.onclick=()=>{ Engine.toggleArtyMode(); };
+    o.appendChild(art);
   }
   function selLane(i){ Engine.selectLane(i); document.querySelectorAll('.lane-b').forEach((x,idx)=>x.classList.toggle('active',idx===i)); }
 
@@ -203,6 +215,10 @@
         const sup=def.cost.s*(s.fac.mult.supplyCost||1);
         card.classList.toggle('disabled', s.res.m<def.cost.m || s.res.s<sup || cd>0);
       });
+      // artillery control button state
+      const ab=$('artyBtn');
+      if(ab){ ab.classList.toggle('active', s.artyMode);
+        ab.textContent = s.artyMode ? (s.artyCd>0?('🎯 Reload '+s.artyCd.toFixed(1)):'🎯 AIMING') : '🎯 Artillery (T)'; }
       // meters
       document.querySelectorAll('#meters .meter').forEach(d=>{
         const k=d.dataset.key, fill=d.querySelector('.mfill'), val=d.querySelector('.mval');
@@ -226,26 +242,54 @@
   function showAftermath(r){
     $('resTitle').textContent = r.won?'VICTORY':'DEFEAT';
     $('resTitle').className = r.won?'win':'lose';
-    $('resSub').textContent = r.won
-      ? (r.camp.mode==='defence'?'The line held. The enemy breaks off the assault.':'The enemy position is taken!')
-      : 'The line is broken. The position is lost.';
-    $('resStats').innerHTML =
+    const fac=D.FACTIONS[r.camp.faction];
+    // epic, faction-flavoured end-of-campaign summary
+    const winLines={
+      german:'Flanders holds. The stormtroopers stand victorious amid the smoke — and the Empire endures another day.',
+      ottoman:'The cliffs are held, the faithful unbroken. Word of the Caliphate’s defiance will travel far.',
+      austria:'The eleven-tongued line held as one. The guns fall silent over a field that is, today, yours.',
+      bulgaria:'The mountain kept its promise. The passes are sealed and the enemy streams back down the slopes.',
+      arab:'The desert swallows the raiders once more — the railway burns, the garrison starves.'
+    };
+    const loseLines={
+      german:'The line breaks. The grey ranks fall back through the wire, and the guns roll on without them.',
+      ottoman:'The heights are lost. The faithful are scattered to the ravines — but the war is not yet over.',
+      austria:'The brigade fractures and the line gives way. The patchwork empire bleeds again.',
+      bulgaria:'The pass is forced. The mountain wall is breached and the valley lies open.',
+      arab:'The raid fails — the counter falls, and the sands close over the column.'
+    };
+    $('resSub').textContent = (r.won?winLines:loseLines)[r.camp.faction] || (r.won?'Victory.':'Defeat.');
+    // medals / achievements
+    const medals=[
+      {name:'Veteran', got:true},
+      {name:'Iron Wall', got:r.stats.lost<=8},
+      {name:'Butcher’s Bill', got:r.stats.kills>=30},
+      {name:'Faithful', got:r.stats.defected>0},
+      {name:'Triumphant', got:r.won}
+    ];
+    const medalHtml = '<div class="medals">'+medals.map(m=>
+      `<div class="medal ${m.got?'':'locked'}"><div class="disc"></div><div class="ribbon"></div>${m.name}</div>`).join('')+'</div>';
+    $('resStats').innerHTML = medalHtml +
       `<div class="stat"><span>Front</span><b>${r.camp.name}</b></div>
+       <div class="stat"><span>Faction</span><b>${fac.name}</b></div>
        <div class="stat"><span>Enemy losses</span><b>${r.stats.kills}</b></div>
        <div class="stat"><span>Your losses</span><b>${r.stats.lost}</b></div>
        <div class="stat"><span>Defections won</span><b>${r.stats.defected}</b></div>
-       <div class="stat"><span>Time</span><b>${r.time}s</b></div>`;
+       <div class="stat"><span>Duration</span><b>${r.time}s</b></div>`;
     show('aftermath');
   }
 
   // ---------------------------------------------------------------- input
   function bindInput(){
-    // canvas click -> select lane
+    // canvas click -> fire artillery (in arty mode) or select lane
     const cv=$('game');
+    function toGame(e){ const r=cv.getBoundingClientRect();
+      return { x:(e.clientX-r.left)/r.width*Engine.W, y:(e.clientY-r.top)/r.height*Engine.H }; }
+    cv.addEventListener('mousemove',e=>{ const s=Engine.state; if(s&&s.artyMode){ const g=toGame(e); Engine.setArtyAim(g.x,g.y); } });
     cv.addEventListener('click',e=>{
-      const r=cv.getBoundingClientRect();
-      const y=(e.clientY-r.top)/r.height*Engine.H;
-      selLane(Engine.laneFromY(y));
+      const s=Engine.state;
+      if(s&&s.artyMode){ const g=toGame(e); Engine.setArtyAim(g.x,g.y); Engine.fireArty(); return; }
+      selLane(Engine.laneFromY(toGame(e).y));
     });
     // ability
     $('abilityBtn').onclick=()=>Engine.fireAbility();
@@ -260,7 +304,10 @@
       else if(k==='f'){ Engine.setOrder('fallback'); syncOrder('fallback'); }
       else if(k==='e'){ Engine.buildAction('trench'); }
       else if(k==='w'){ Engine.buildAction('wire'); }
+      else if(k==='b'){ Engine.buildAction('shore'); }
+      else if(k==='t'){ Engine.toggleArtyMode(); }
       else if(k==='r'){ Engine.fireAbility(); }
+      else if(k==='m'){ const m=!Sound.isMuted(); Sound.setMuted(m); $('mutebtn').textContent=m?'🔇 Muted':'🔊 Sound'; }
       else if(k===' '){ e.preventDefault(); Engine.togglePause(); }
       else if(k==='arrowup'){ const s=Engine.state; if(s)selLane(Math.max(0,s.activeLane-1)); }
       else if(k==='arrowdown'){ const s=Engine.state; if(s)selLane(Math.min(Engine.NLANES-1,s.activeLane+1)); }
@@ -273,15 +320,88 @@
     buildMenu();
     buildCampaignSelect();
     bindInput();
+    // resume Web Audio on first user gesture (autoplay policy)
+    const wake=()=>{ Sound.resume(); document.removeEventListener('pointerdown',wake); document.removeEventListener('keydown',wake); };
+    document.addEventListener('pointerdown',wake); document.addEventListener('keydown',wake);
     // menu navigation
-    $('btnPlay').onclick=()=>show('campaign-select');
+    $('btnPlay').onclick=()=>{ Sound.SFX.click(); show('campaign-select'); };
     $('btnHelp').onclick=()=>show('help');
-    document.querySelectorAll('.back-to-menu').forEach(b=>b.onclick=()=>show('menu'));
+    document.querySelectorAll('.back-to-menu').forEach(b=>b.onclick=()=>{ show('menu'); startMenuBg(); });
     document.querySelectorAll('.back-to-camp').forEach(b=>b.onclick=()=>show('campaign-select'));
     $('btnReplay').onclick=()=>show('campaign-select');
-    // start loading -> menu
+    $('introSkip').onclick=()=>endIntro();
+    // mute toggle
+    $('mutebtn').onclick=()=>{ const m=!Sound.isMuted(); Sound.setMuted(m); $('mutebtn').textContent=m?'🔇 Muted':'🔊 Sound'; };
+    // loading -> intro -> menu
     show('loading');
-    runLoading(()=>show('menu'));
+    runLoading(()=>runIntro(()=>{ show('menu'); startMenuBg(); }));
+  }
+
+  // ---------------------------------------------------------------- INTRO CINEMATIC
+  let introRaf=null, introDone=null;
+  function runIntro(done){
+    introDone=done;
+    show('intro');
+    Sound.resume(); Sound.startMusic();
+    const c=$('introCanvas'); c.width=720; c.height=360; const x=c.getContext('2d'); x.imageSmoothingEnabled=false;
+    const lines=['The world is at war.','Command your empire.','Shape history.'];
+    let t=0;
+    function frame(){
+      introRaf=requestAnimationFrame(frame); t+=1/60;
+      const zoom=1+t*0.06;
+      x.fillStyle='#0d1418'; x.fillRect(0,0,720,360);
+      // pixel map of Europe (stylised landmass) zooming in
+      x.save(); x.translate(360,180); x.scale(zoom,zoom); x.translate(-360,-180);
+      x.fillStyle='#2b3a2e';
+      const land=[[120,80,260,70],[150,150,360,80],[300,120,180,120],[200,220,300,60],[420,90,120,160],[100,120,90,120]];
+      land.forEach(r=>x.fillRect(r[0],r[1],r[2],r[3]));
+      x.fillStyle='#1c2a30'; x.fillRect(0,0,720,40); x.fillRect(0,320,720,40);
+      // Central Powers territory glow
+      x.fillStyle='rgba(160,40,30,'+(0.2+0.1*Math.sin(t*3))+')'; x.fillRect(280,120,200,140);
+      x.restore();
+      // flags rising from the bottom
+      const nations=['german','austria','ottoman','bulgaria'];
+      for(let i=0;i<4;i++){ const rise=Math.min(1,Math.max(0,(t-0.4-i*0.25))); const fy=360-rise*150;
+        S.drawFlag(x, 200+i*100, fy, nations[i], t*12); if(nations[i]==='ottoman') S.drawOttomanCrescent(x,200+i*100,fy); }
+      // vignette
+      x.fillStyle='rgba(0,0,0,0.35)'; x.fillRect(0,0,720,70); x.fillRect(0,290,720,70);
+      // voiceover text, line by line
+      const li=Math.floor(t/1.5);
+      if(li<lines.length){ const la=Math.min(1,(t/1.5-li)); x.globalAlpha=la;
+        x.fillStyle='#ffe9b0'; x.font='bold 26px Georgia'; x.textAlign='center';
+        x.fillText(lines[li],360,330); x.textAlign='left'; x.globalAlpha=1; }
+      // occasional drum hit
+      if(Math.floor(t*2)!==Math.floor((t-1/60)*2) && !Sound.isMuted()) Sound.SFX.shout();
+      if(t>5.4) endIntro();
+    }
+    frame();
+  }
+  function endIntro(){ if(introRaf){cancelAnimationFrame(introRaf); introRaf=null;} const d=introDone; introDone=null; if(d)d(); }
+
+  // ---------------------------------------------------------------- ANIMATED MENU BACKGROUND
+  let menuRaf=null;
+  function startMenuBg(){
+    let c=$('menuBg');
+    if(!c){ c=el('canvas'); c.id='menuBg'; $('menu').insertBefore(c, $('menu').firstChild); }
+    c.width=960; c.height=540; const x=c.getContext('2d'); x.imageSmoothingEnabled=false;
+    if(menuRaf) cancelAnimationFrame(menuRaf);
+    let t=0;
+    function frame(){
+      if(!$('menu').classList.contains('active')){ menuRaf=null; return; }
+      menuRaf=requestAnimationFrame(frame); t+=1/60;
+      // three parallax bands: trenches, desert, mountains
+      x.fillStyle='#1a140d'; x.fillRect(0,0,960,540);
+      x.fillStyle='#241c12'; for(let i=0;i<8;i++){ const yy=120+i*52; x.fillRect((t*8+i*40)%960-40,yy,60,26); x.fillRect((t*8+i*40+200)%960-40,yy,40,26); }
+      // distant mountains
+      x.fillStyle='#2a2f2a'; for(let i=0;i<7;i++){ const mx=i*150-(t*4%150); x.beginPath(); x.moveTo(mx,200); x.lineTo(mx+75,90); x.lineTo(mx+150,200); x.fill(); }
+      // muzzle-flash flickers on the horizon
+      if(Math.random()<0.06){ x.fillStyle='rgba(255,210,120,0.5)'; x.fillRect(Math.random()*960,180+Math.random()*40,6,3); }
+      // foreground silhouette trench + soldiers
+      x.fillStyle='#0d0a07'; x.fillRect(0,430,960,110);
+      for(let i=0;i<10;i++){ x.fillStyle='#000'; const sx=40+i*100; x.fillRect(sx,400,10,30); x.fillRect(sx+6,392,14,2); }
+      x.fillStyle='rgba(13,10,7,0.55)'; x.fillRect(0,0,960,540);
+    }
+    frame();
   }
 
   global.UI = { init };

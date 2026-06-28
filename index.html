@@ -16,6 +16,13 @@
   <div id="loadHint">IRON &amp; FAITH — a WW1 strategy game of the Central Powers</div>
 </div>
 
+<!-- ============ INTRO CINEMATIC ============ -->
+<div id="intro" class="screen">
+  <canvas id="introCanvas"></canvas>
+  <div id="introText"></div>
+  <div class="menu-btn mini" id="introSkip" style="margin-top:14px">Skip ▶</div>
+</div>
+
 <!-- ============ MAIN MENU ============ -->
 <div id="menu" class="screen">
   <div class="title">IRON &amp; FAITH</div>
@@ -91,6 +98,7 @@
   <div class="hud" id="deck"></div>
 
   <div class="hud menu-btn mini" id="pausebtn">⏸ Pause</div>
+  <div class="hud menu-btn mini" id="mutebtn">🔊 Sound</div>
   <div class="hud" id="banner"><h2></h2><p></p></div>
 </div>
 
@@ -106,6 +114,8 @@
 </div>
 
 <script src="js/sprites.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/audio.js"></script>
 <script src="js/data.js"></script>
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>

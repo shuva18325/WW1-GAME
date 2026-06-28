@@ -340,4 +340,36 @@ WW1-GAME/
 
 ---
 
+---
+
+## 13. UPGRADE PACK (v2) — IMPLEMENTED
+
+### 13.1 Visual & FX (new `js/fx.js`)
+Particle engine + screen shake + dynamic lighting: muzzle smoke/sparks, **per-weapon muzzle flashes**, **onomatopoeia popups** (rifle "bang bang", MG "BRRRRT", artillery "BAAANG!", tank "KRAA-THOOM!"), upgraded **explosions** (shockwave rings, debris, smoke, scorch), **screen shake**, **flamethrower flame physics + burning DoT**, **animated tank treads + dust + ricochet sparks**, **weather animations** (rain/fog/snow/sandstorm/gas), **dynamic barrage/naval lighting**, **unit shadows**, **idle breathing**, **waving flags**, **officer capes/medals/command gesture**, **steel bunkers**, and **off-shore warships**.
+
+### 13.2 Audio (new `js/audio.js`)
+Procedural Web Audio: rifle cracks, MG bursts, artillery/naval booms, flamethrower roar, **tank engine rumble**, explosions, officer shouts, per-theme **ambience** (wind/sea/mountain), a **march-music loop**, victory/defeat stingers, and a **mute toggle** (M / 🔊). Authentic accented voice-acting is specced for a future recorded-VO drop; in-engine it is represented by on-screen shouts + synth stingers.
+
+### 13.3 New gameplay systems
+- **Deployable Officers:** morale aura + cooldown **mini-barrage** + **reinforcement call** on deploy (every faction has an Officer card).
+- **Naval Attack system:** fleet bombardment with shockwave/shake, **shore batteries** (build with **B**) that intercept fire, **amphibious landings**.
+- **Manual Artillery Control (T):** mouse-aimed barrage with **trajectory arc + impact-radius preview** and cooldown.
+- **Frozen equipment** on winter fronts (halved fire rate during cold snaps).
+
+### 13.4 New campaigns (now 11 total)
+Caucasus Winter Offensive (Ottoman vs Russia) · Eastern Balkans Push (Bulgaria+Germany vs Serbia/Romania) · Arabian Desert Storm (Ottoman vs Arab Revolt) · Black Sea Naval Clash (Ottoman vs Russian fleet).
+
+### 13.5 New units
+Germany: Flamethrower, Heavy Stormtrooper, Panzerwagen, MG-08, Trench Shotgun, Officer · Ottoman: Desert Riflemen, Camel MG Platform, Heavy Mortar, Officer, Desert Raider Cavalry · Austria: Siege Artillery, Mountain Sharpshooter, Mixed Battalion, Officer · Bulgaria: Mountain Grenadier, Forest Ambusher, Bunker Engineer, Officer · Arab Revolt: Demolition Team, Camel Raider Elite, Desert Sniper, Hit-and-Run Cavalry.
+
+### 13.6 Intro, menu & polish
+Opening **cinematic** (Europe map zoom, rising flags, voiceover "The world is at war. Command your empire. Shape history."), **animated parallax menu**, **metallic WW1 UI frames**, **faction-coloured** difficulty screens, **victory/defeat cutscenes** with faction-flavoured summaries, **pixel-art achievement medals**, and difficulty-scaled AI/economy.
+
+### 13.7 Updated file map
+```
+js/fx.js     particle/shake/lighting/weather engine
+js/audio.js  procedural Web Audio soundscape
+```
+(added to the existing sprites/data/game/ui/main modules.)
+
 *End of Section 2 — Game Design Document. The full background/planning is in `PLANNING.md`; the playable build is `index.html`.*
