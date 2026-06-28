@@ -7,7 +7,7 @@ A WW1 **campaign-style real-time strategy game** where you are a **commander / g
 ![Signboard menu — World War I in Europe theatre map](screenshots/menu.png)
 
 ## ▶ Play it now (no install)
-**▶ [PLAY IN YOUR BROWSER](https://rawcdn.githack.com/shuva18325/WW1-GAME/c16aa58f11f78e9cf30fa691cf88a7a04a973424/index.html)** — guaranteed-fresh snapshot of the latest build, nothing to set up.
+**▶ [PLAY IN YOUR BROWSER](https://rawcdn.githack.com/shuva18325/WW1-GAME/675653c5677bd2bb699fbb05a78a044fe7a353c3/index.html)** — guaranteed-fresh snapshot of the latest build, nothing to set up.
 
 (Always-latest branch link: <https://raw.githack.com/shuva18325/WW1-GAME/claude/ww1-central-powers-game-skaf1l/index.html>)
 
