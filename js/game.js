@@ -285,12 +285,14 @@
     }
 
     if(tgt && dist(u,tgt) <= rng){
-      // in range: fire
-      u.pose='fire'; u.cd-=dt;
+      // in range: fire → recoil flash → reload → aim cycle
+      u.cd-=dt; u.shotT=(u.shotT||0)-dt;
       if(u.cd<=0){
         if(d.flags.flame) flameAttack(u,tgt); else shoot(u,tgt,rng);
-        u.cd = fireInterval(d);
+        const iv=fireInterval(d); u.cd=iv; u.reloadIv=iv; u.shotT=Math.min(0.14, iv*0.4);
       }
+      const iv=u.reloadIv||fireInterval(d);
+      u.pose = u.shotT>0 ? 'fire' : (iv>0.5 && u.cd>iv*0.42 ? 'reload' : 'aim');
       return;
     }
 

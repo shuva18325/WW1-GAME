@@ -47,6 +47,9 @@ Procedural **chunky pixel-art**, re-coloured & re-helmeted per nationality (Stah
 | Black Sea Naval Clash | Caucasus Winter Offensive |
 | ![Black Sea](screenshots/black_sea.png) | ![Caucasus Winter](screenshots/caucasus_winter.png) |
 
+### v5 upgrades
+**Historical 1914 borders** (from the public-domain *historical-basemaps* 1914 dataset): the theatre map now shows the **German Empire, Austro‑Hungarian Empire, Russian Empire and Ottoman Empire** as single period entities — **no independent Poland**, no modern fragmentation. · **Qing troops are now Chinese**, not Ottoman: conical rattan hats, slate‑blue/red uniforms, queues, and a proper roster — **Matchlock Musketeer, Imperial Pike, Imperial Dragoon, Palace Guard, Banner Infantry, Mandarin Officer, Imperial Cannon** (Taiping rebels fight in red). · **More detailed, more animated soldiers**: added webbing/pouches/face detail and a **reload animation** (fire → recoil → reload → aim cycle).
+
 ### v4 upgrades
 **Real map, not blobs:** the signboard & intro now render the **actual country borders** of the WW1 theatre (built from public‑domain world GeoJSON, `js/europe_geo.js`) coloured by 1914 alliance — true coastlines for Britain, Iberia, Italy, Greece, Anatolia, North Africa, etc. · **Treaties & Outcomes** section with signing‑hall cutscenes and historical outcomes: **Brest‑Litovsk**, **Versailles**, **Saint‑Germain**, and **Sèvres — "the Caliphate is now a hollow shell."**
 

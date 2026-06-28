@@ -77,6 +77,16 @@
     r_sniper:     { name:'Desert Sniper',    nation:'arab', role:'support',  hp:45, armor:0, dmg:20,range:310, fireRate:0.8, speed:40, morale:85, cost:{m:7,s:6}, cd:5, helmet:'keffiyeh', weapon:'sniper', flags:{} },
     r_hitrun:     { name:'Hit-and-Run Cav',  nation:'arab', role:'mobile',   hp:70, armor:0, dmg:9, range:140, fireRate:1.8, speed:72, morale:90, cost:{m:7,s:5}, cd:3, flags:{isCamel:true, ambush:true, hitrun:true} },
 
+    // ----- QING EMPIRE (Taiping Rebellion, pre-war) -----
+    q_banner:     { name:'Banner Infantry',  nation:'qing', role:'line',    hp:70, armor:0, dmg:6, range:150, fireRate:1.6, speed:30, morale:80, cost:{m:5,s:3}, cd:2, weapon:'matchlock', flags:{} },
+    q_musketeer:  { name:'Matchlock Musketeer',nation:'qing',role:'support', hp:65, armor:0, dmg:11,range:190, fireRate:0.9, speed:24, morale:82, cost:{m:6,s:5}, cd:3, weapon:'matchlock', flags:{} },
+    q_pike:       { name:'Imperial Pike',     nation:'qing', role:'line',    hp:115,armor:2, dmg:15,range:72,  fireRate:1.2, speed:30, morale:86, cost:{m:6,s:4}, cd:3, weapon:'pike', flags:{antitrench:true} },
+    q_dragoon:    { name:'Imperial Dragoon',  nation:'qing', role:'mobile',  hp:85, armor:1, dmg:8, range:150, fireRate:2.0, speed:56, morale:88, cost:{m:8,s:6}, cd:4, weapon:'rifle', flags:{} },
+    q_palace:     { name:'Palace Guard',      nation:'qing', role:'line',    hp:125,armor:2, dmg:8, range:165, fireRate:2.0, speed:30, morale:96, cost:{m:9,s:6}, cd:3, weapon:'rifle', flags:{} },
+    q_cannon:     { name:'Imperial Cannon',   nation:'qing', role:'arty',    hp:60, armor:0, dmg:30,range:480, fireRate:0.3, speed:10, morale:78, cost:{m:8,s:14}, cd:8, flags:{indirect:true} },
+    q_engineer:   { name:'Imperial Engineer', nation:'qing', role:'engineer',hp:65, armor:0, dmg:3, range:90,  fireRate:1.4, speed:28, morale:80, cost:{m:5,s:4}, cd:4, weapon:'matchlock', flags:{isEngineer:true} },
+    q_officer:    { name:'Mandarin Officer',  nation:'qing', role:'officer',  hp:95, armor:1, dmg:6, range:140, fireRate:1.4, speed:30, morale:100,cost:{m:10,s:8}, cd:10, weapon:'rifle', flags:{officer:true} },
+
     // ----- ENEMY UNITS (AI) -----
     e_brit_line:  { name:'British Infantry', nation:'british', role:'line',   hp:75, armor:1, dmg:6, range:160, fireRate:1.9, speed:30, morale:80, helmet:'brodie', flags:{} },
     e_anzac:      { name:'ANZAC Assault',    nation:'british', role:'assault',hp:85, armor:1, dmg:9, range:140, fireRate:2.0, speed:42, morale:88, helmet:'brodie', flags:{} },
@@ -87,7 +97,9 @@
     e_tank_rhom:  { name:'Mark Tank',        nation:'british', role:'tank',   hp:280,armor:6, dmg:15,range:200, fireRate:1.1, speed:20, morale:100, flags:{isTank:true, tankType:'rhomboid'} },
     e_tank_ft:    { name:'FT Tank',          nation:'french',  role:'tank',   hp:170,armor:5, dmg:11,range:180, fireRate:1.4, speed:30, morale:100, flags:{isTank:true, tankType:'ft'} },
     e_arab_raid:  { name:'Arab Raider',      nation:'arab',    role:'mobile', hp:65, armor:0, dmg:7, range:150, fireRate:2.0, speed:62, morale:88, flags:{isCamel:true} },
-    e_ott_def:    { name:'Ottoman Defender', nation:'ottoman', role:'line',   hp:80, armor:1, dmg:6, range:160, fireRate:1.9, speed:26, morale:92, helmet:'kabalak', flags:{ragged:true} }
+    e_ott_def:    { name:'Ottoman Defender', nation:'ottoman', role:'line',   hp:80, armor:1, dmg:6, range:160, fireRate:1.9, speed:26, morale:92, helmet:'kabalak', flags:{ragged:true} },
+    e_taiping:    { name:'Taiping Rebel',    nation:'taiping', role:'line',   hp:70, armor:0, dmg:6, range:150, fireRate:1.7, speed:32, morale:80, weapon:'matchlock', flags:{horde:true} },
+    e_taiping_z:  { name:'Taiping Zealot',   nation:'taiping', role:'assault',hp:80, armor:0, dmg:11,range:80,  fireRate:1.3, speed:40, morale:90, weapon:'pike', flags:{horde:true} }
   };
 
   // ------------------------------------------------------------- FACTIONS
@@ -170,7 +182,7 @@
       mult:{ routChance:1.1, artyPower:1.1 },
       ability:{ id:'artillery_barrage', name:'IMPERIAL CANNONADE', charge:52,
         desc:'Heavy bombardment + morale boost + enemy suppression' },
-      roster:['o_regular','o_elite','o_eliterifle','o_mg','o_mortar','o_engineer','o_officer'],
+      roster:['q_banner','q_musketeer','q_pike','q_dragoon','q_palace','q_engineer','q_officer','q_cannon'],
       voice:{ spawn:['For the Dragon Throne!','Hold, soldiers of the Qing!'],
         advance:['Advance the banners!'], ability:['Cannons — open fire!'] }
     }
@@ -313,10 +325,10 @@
       id:'taiping', era:'prewar', name:'Taiping Rebellion', faction:'qing', flag:'qing',
       subtitle:'1850–1864 — Qing Empire vs the Heavenly Kingdom',
       mode:'mixed', theme:'mud', difficulties:DIFFS_3,
-      enemies:['e_russian','e_brit_line','e_russian'], enemyNation:'russian',
+      enemies:['e_taiping','e_taiping','e_taiping_z'], enemyNation:'taiping',
       rules:{ horde:true },
       events:['mass_assault','supply_convoy','artillery_ready'],
-      brief:'Decades before the World War, the Heavenly Kingdom rises across southern China. Hold the Qing line against vast rebel armies with imperial artillery, officers, and sheer weight of numbers.',
+      brief:'Decades before the World War, the Heavenly Kingdom rises across southern China. Hold the Qing line against vast rebel armies with matchlock muskets, imperial pikes, palace guards and sheer weight of numbers.',
       intel:'PRE-WAR · Qing vs Taiping · Massed infantry · Artillery'
     },
     {

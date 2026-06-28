@@ -1,0 +1,3 @@
+js/europe_geo.js is derived from the public-domain "historical-basemaps"
+project (world_1914.geojson), simplified and projected for in-game rendering.
+Source: https://github.com/aourednik/historical-basemaps  (public domain / CC0)

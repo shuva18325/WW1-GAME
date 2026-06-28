@@ -18,13 +18,16 @@
     arab:     { uniform:'#cdbb97', uni2:'#b3a079', helmet:'#e8e2d2', skin:'#caa173', pack:'#8a7350', boots:'#5a4426', belt:'#3a2c18', metal:'#c4c7c1', accent:'#7a1f1f', cloth:'#e8e2d2' },
     british:  { uniform:'#7d7142', uni2:'#655b34', helmet:'#6f6638', skin:'#e6c098', pack:'#5a4d2e', boots:'#33271a', belt:'#241c10', metal:'#bcbfb9', accent:'#3a3420' },
     french:   { uniform:'#5f76a6', uni2:'#4a5e88', helmet:'#56688f', skin:'#e6c098', pack:'#4a4030', boots:'#2c2418', belt:'#1e1810', metal:'#bcbfb9', accent:'#b9b08a' },
-    russian:  { uniform:'#6f6a4e', uni2:'#57523b', helmet:'#5c5740', skin:'#e6c098', pack:'#534830', boots:'#2c2418', belt:'#1e160c', metal:'#bcbfb9', accent:'#7a6f4a' }
+    russian:  { uniform:'#6f6a4e', uni2:'#57523b', helmet:'#5c5740', skin:'#e6c098', pack:'#534830', boots:'#2c2418', belt:'#1e160c', metal:'#bcbfb9', accent:'#7a6f4a' },
+    qing:     { uniform:'#3f5a66', uni2:'#314650', helmet:'#c9a85a', skin:'#e4c69a', pack:'#5a4a30', boots:'#241a10', belt:'#7a1f1a', metal:'#c4c7c1', accent:'#b5302a', cloth:'#c9a85a' },
+    taiping:  { uniform:'#7a3030', uni2:'#5e2424', helmet:'#b5302a', skin:'#e4c69a', pack:'#4a3020', boots:'#241a10', belt:'#2a1410', metal:'#c4c7c1', accent:'#f0d24a', cloth:'#c01a1a' }
   };
 
   // helmet style per nationality (overridable per-unit)
   const HELMET_BY_NATION = {
     german:'stahlhelm', ottoman:'kabalak', austria:'stahlhelm',
-    bulgaria:'cap', arab:'keffiyeh', british:'brodie', french:'adrian', russian:'cap'
+    bulgaria:'cap', arab:'keffiyeh', british:'brodie', french:'adrian', russian:'cap',
+    qing:'conical', taiping:'turban'
   };
 
   function pal(nation){ return PAL[nation] || PAL.german; }
@@ -86,12 +89,36 @@
     B(ctx, 5, 13, 5, 1, p.belt, s);
     B(ctx, 7, 13, 1, 1, '#c9a23a', s);
 
-    // head + face
+    // head + face (more detail: brow, eye, jaw shading)
     B(ctx, 6, 4, 4, 3, p.skin, s);
-    B(ctx, 6, 4, 1, 3, '#00000022', s);
+    B(ctx, 6, 4, 1, 3, '#00000022', s);      // jaw shadow
+    B(ctx, 8, 5, 1, 1, '#3a2a1c', s);        // eye
+    B(ctx, 6, 4, 3, 1, '#00000018', s);      // brow line
+    B(ctx, 6, 6, 3, 1, '#ffffff10', s);      // cheek highlight
+
+    // webbing / equipment detail (all infantry)
+    B(ctx, 6, 7, 1, 6, '#00000026', s);      // shoulder strap
+    B(ctx, 8, 7, 1, 6, '#00000018', s);
+    B(ctx, 6, 12, 2, 2, p.belt, s);          // ammo pouch L
+    B(ctx, 8, 12, 2, 2, p.belt, s);          // ammo pouch R
+
+    // queue / braid for Qing troops (down the back)
+    if(opts.nation==='qing'){ B(ctx, 4, 6, 2, 8, '#161009', s); B(ctx, 4, 13, 2, 2, '#161009', s); }
 
     // helmet variants
     switch(helmet){
+      case 'conical':                         // Asian conical rattan hat (Qing)
+        B(ctx, 3, 3, 10, 1, p.helmet, s);
+        B(ctx, 4, 2, 8, 1, p.helmet, s);
+        B(ctx, 6, 0, 4, 2, p.helmet, s);
+        B(ctx, 3, 3, 10, 1, '#00000026', s);
+        B(ctx, 7, 0, 2, 1, p.accent, s);      // red knob
+        break;
+      case 'turban':                          // Taiping red headscarf
+        B(ctx, 5, 2, 6, 3, p.cloth||'#c01a1a', s);
+        B(ctx, 5, 2, 6, 1, p.accent, s);
+        B(ctx, 10, 3, 2, 2, p.cloth||'#c01a1a', s);
+        break;
       case 'stahlhelm':
         B(ctx, 5, 3, 6, 2, p.helmet, s);
         B(ctx, 4, 4, 1, 1, p.helmet, s);    // side flare
@@ -138,7 +165,32 @@
     B(ctx, 9, 9, 3, 3, p.uniform, s);        // forward arm
     B(ctx, 8, 9, 2, 3, p.uni2, s);           // rear arm
     const flash = pose==='fire';
+
+    // RELOAD animation: weapon lowered, hand working the action (firearms only)
+    if(pose==='reload' && weapon!=='pike' && weapon!=='flame'){
+      B(ctx, 9, ry+2, 5, 1, '#7d7468', s);   // barrel tipped down
+      B(ctx, 8, ry+1, 2, 2, '#4a3a26', s);   // stock
+      B(ctx, 10, ry-1, 2, 2, p.skin, s);     // rear hand up at the bolt/magazine
+      B(ctx, 11, ry-2, 1, 1, p.metal, s);    // round / clip glint
+      ctx.restore(); return;
+    }
+
     switch(weapon){
+      case 'matchlock':                        // Qing musketeer with fork rest
+        B(ctx, 9, ry, 8, 1, '#5a4a36', s);
+        B(ctx, 16, ry, 1, 1, '#2a2a2a', s);
+        B(ctx, 8, ry, 2, 2, '#3a2a18', s);
+        B(ctx, 13, ry+1, 1, 4, '#3a2a1c', s);  // forked support stick
+        B(ctx, 12, ry+4, 3, 1, '#3a2a1c', s);
+        if(flash){ B(ctx,17,ry-1,3,3,'#ffd24a',s); B(ctx,18,ry,2,1,'#fff3b0',s); B(ctx,16,ry,2,1,'#ff8a3a',s); }
+        break;
+      case 'pike':                             // imperial pike (held upright)
+        B(ctx, 10, ry-9, 1, 12, '#6a4a2a', s); // shaft
+        B(ctx, 9, ry-12, 3, 3, p.metal, s);    // spear head
+        B(ctx, 10, ry-14, 1, 2, p.metal, s);
+        B(ctx, 9, 9, 2, 3, p.uniform, s);      // grip
+        if(p.accent){ B(ctx, 9, ry-9, 1, 1, p.accent, s); } // tassel
+        break;
       case 'mg':
         B(ctx, 8, ry, 9, 1, '#6a625a', s);     // long heavy barrel
         B(ctx, 12, ry+1, 1, 3, '#3a342c', s);  // bipod leg
