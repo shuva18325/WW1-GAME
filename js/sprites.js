@@ -195,6 +195,34 @@
     ctx.fillStyle='#7c6a44'; for(let i=0;i<w;i+=10){ ctx.fillRect(x+i, y+h-4, 8, 5); }
   }
 
+  // BOMBER aircraft (air raids)
+  function drawPlane(ctx, x, y, s, facing, prop){
+    ctx.save(); ctx.translate(x,y); if(facing<0) ctx.scale(-1,1);
+    const body='#5a5f4e', dk='#3f4437';
+    B(ctx, 2, 3, 16, 2, body, s);             // fuselage
+    B(ctx, 2, 3, 16, 1, '#6e7460', s);
+    B(ctx, 4, 1, 9, 1, body, s);              // upper wing
+    B(ctx, 4, 6, 9, 1, body, s);              // lower wing
+    B(ctx, 6, 1, 1, 5, dk, s);                // struts
+    B(ctx, 10,1, 1, 5, dk, s);
+    B(ctx, 0, 2, 2, 3, dk, s);                // tail
+    B(ctx, 17, 2, 1, 3, '#2a2a2a', s);        // nose
+    if(prop) B(ctx, 18, 0, 1, 6, '#cfcaba', s); // propeller blur
+    // iron cross
+    B(ctx, 7, 3, 2, 1, '#e9e9e9', s); B(ctx,7,3,1,2,'#1a1a1a',s);
+    ctx.restore();
+  }
+  // ZEPPELIN airship (slow, big, easy to intercept)
+  function drawZeppelin(ctx, x, y, s){
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle='#9a958a'; ctx.beginPath(); ctx.ellipse(20*s,8*s,20*s,7*s,0,0,7); ctx.fill();
+    ctx.fillStyle='#b4afa2'; ctx.beginPath(); ctx.ellipse(20*s,6*s,20*s,3*s,0,0,7); ctx.fill();
+    ctx.fillStyle='#6a665c'; B(ctx, 36, 7, 4, 3, '#6a665c', s);      // tail fin
+    B(ctx, 16, 14, 8, 2, '#3a342c', s);                              // gondola
+    B(ctx, 18, 5, 2, 2, '#1a1a1a', s); B(ctx, 24, 5, 2, 2, '#1a1a1a', s); // markings
+    ctx.restore();
+  }
+
   // off-shore WARSHIP silhouette (naval bombardment). flash>0 lights the guns.
   function drawWarship(ctx, x, y, s, flash){
     const hull='#4a525a', dk='#333a40', lt='#5e6770';
@@ -370,7 +398,9 @@
     bulgaria:['#fff','#1a7a3a','#c8102e'],
     british: ['#012169','#fff','#c8102e'],
     french:  ['#0055a4','#fff','#ef4135'],
-    russian: ['#fff','#0039a6','#d52b1e']
+    russian: ['#fff','#0039a6','#d52b1e'],
+    qing:    ['#f2c200','#e0b000','#c01a1a'],      // Qing imperial yellow
+    serbia:  ['#c8102e','#0039a6','#fff']
   };
 
   function drawOttomanCrescent(ctx,x,y){
@@ -381,7 +411,7 @@
   global.Sprites = {
     PAL, FLAGS, pal, drawSoldier, drawCorpse, drawTank, drawCamel, drawShadow,
     drawTrench, drawWire, drawCrater, drawMGNest, drawFlag, drawOttomanCrescent,
-    drawBunker, drawWarship,
+    drawBunker, drawWarship, drawPlane, drawZeppelin,
     block:B
   };
 

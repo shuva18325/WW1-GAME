@@ -81,28 +81,69 @@
   }
 
   // ---------------------------------------------------------------- MENU
-  function buildMenu(){
-    const row=$('menuFlags');
-    ['german','austria','ottoman','bulgaria'].forEach(n=>{
-      const cc=el('canvas'); cc.width=24; cc.height=40; const cx=cc.getContext('2d');
-      S.drawFlag(cx,8,34,n); if(n==='ottoman')S.drawOttomanCrescent(cx,8,34); row.appendChild(cc);
-    });
-  }
+  function buildMenu(){ /* menu is now a canvas signboard scene (see startMenuScene) */ }
 
   // ---------------------------------------------------------------- CAMPAIGNS
   function buildCampaignSelect(){
     const grid=$('campGrid'); grid.innerHTML='';
-    D.CAMPAIGNS.forEach(c=>{
+    const mkHead=(t)=>{ const h=el('div','grid-head',t); grid.appendChild(h); };
+    const mkCard=(c)=>{
       const fac=D.FACTIONS[c.faction];
       const card=el('div','camp-card');
-      const modeTag = c.mode.toUpperCase();
-      card.innerHTML=`<h3>${c.name}</h3><div class="sub">${c.subtitle}</div>
-        <div class="desc">${c.brief}</div>
-        <div><span class="tag">${fac.name}</span><span class="tag">${modeTag}</span>
-        <span class="tag enemy">${c.intel}</span></div>`;
-      card.onclick=()=>{ curCampaign=c; buildDifficulty(c); show('difficulty-select'); };
+      if(c.type==='cutscene'){
+        card.classList.add('cutscene-card');
+        card.innerHTML=`<h3>📜 ${c.name}</h3><div class="sub">${c.subtitle}</div>
+          <div class="desc">${c.brief}</div><div><span class="tag">HISTORICAL SCENE</span></div>`;
+        card.onclick=()=>showCutscene(c);
+      } else {
+        const modeTag=(c.mode||'').toUpperCase();
+        card.innerHTML=`<h3>${c.name}</h3><div class="sub">${c.subtitle}</div>
+          <div class="desc">${c.brief}</div>
+          <div><span class="tag">${fac?fac.name:''}</span><span class="tag">${modeTag}</span>
+          <span class="tag enemy">${c.intel||''}</span></div>`;
+        card.onclick=()=>{ curCampaign=c; buildDifficulty(c); show('difficulty-select'); };
+      }
       grid.appendChild(card);
-    });
+    };
+    const prewar=D.CAMPAIGNS.filter(c=>c.era==='prewar');
+    const wwi=D.CAMPAIGNS.filter(c=>c.era!=='prewar');
+    if(prewar.length){ mkHead('⏳ PRE-WAR'); prewar.forEach(mkCard); }
+    mkHead('⚔ THE GREAT WAR — CENTRAL POWERS'); wwi.forEach(mkCard);
+  }
+
+  // ---------------------------------------------------------------- CUTSCENE (e.g. Khedivate dissolved)
+  function showCutscene(c){
+    show('cutscene');
+    const cv=$('cutsceneCanvas'); cv.width=720; cv.height=300; const x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
+    if(c.id==='khedivate') drawKhedivate(x);
+    $('cutsceneTitle').textContent=c.name;
+    $('cutsceneText').innerHTML =
+      `<p><b>${c.subtitle}</b></p>
+       <p>18 December 1914. With the Ottoman Empire now at war alongside the Central Powers, Britain severs Egypt from Constantinople: the <b>Khedivate is dissolved</b>, the pro‑Ottoman Khedive Abbas II Hilmi is deposed, and Egypt is proclaimed a <b>Sultanate under British protection</b>.</p>
+       <p>The green standard of the Sultan is lowered over the Citadel of Cairo; the Union Jack rises beside the Nile. The road to Gallipoli, Sinai and the Suez is set — and the desert war begins.</p>`;
+    Sound.resume(); Sound.SFX.defeat();
+  }
+  function drawKhedivate(x){
+    // desert sky + Nile + pyramids + citadel; Ottoman flag lowering, Union Jack rising
+    const sky=x.createLinearGradient(0,0,0,300); sky.addColorStop(0,'#e9b86a'); sky.addColorStop(1,'#f0d9a0'); x.fillStyle=sky; x.fillRect(0,0,720,300);
+    x.fillStyle='#caa45a'; x.fillRect(0,210,720,90);                       // desert
+    x.fillStyle='#3f7ba0'; x.fillRect(0,250,720,16);                       // Nile strip
+    // pyramids
+    x.fillStyle='#c79a55'; [ [120,210,90],[210,210,64],[600,210,80] ].forEach(p=>{ x.beginPath(); x.moveTo(p[0],p[1]); x.lineTo(p[0]+p[2],p[1]); x.lineTo(p[0]+p[2]/2,p[1]-p[2]*0.9); x.fill(); });
+    x.fillStyle='#b98a45'; [ [120,210,90],[600,210,80] ].forEach(p=>{ x.beginPath(); x.moveTo(p[0]+p[2]/2,p[1]-p[2]*0.9); x.lineTo(p[0]+p[2],p[1]); x.lineTo(p[0]+p[2]*0.62,p[1]); x.fill(); });
+    // citadel / mosque with dome + minaret
+    x.fillStyle='#d8c6a0'; x.fillRect(300,150,120,60); x.fillStyle='#c2ad82'; x.fillRect(300,150,120,6);
+    x.fillStyle='#cdbb90'; x.beginPath(); x.arc(360,150,26,Math.PI,0); x.fill();
+    x.fillStyle='#b59a6a'; x.fillRect(412,120,8,90); x.beginPath(); x.arc(416,120,6,Math.PI,0); x.fill(); // minaret
+    // flagpoles: Ottoman lowering (left), Union Jack rising (right)
+    x.fillStyle='#3a2a18'; x.fillRect(330,96,2,60); x.fillRect(392,96,2,60);
+    // Ottoman flag low on pole
+    S.drawFlag(x, 332, 150, 'ottoman', 6); S.drawOttomanCrescent(x, 332, 150);
+    // British flag high on pole
+    S.drawFlag(x, 394, 116, 'british', 6);
+    // crowd silhouettes
+    x.fillStyle='#3a2c1c'; for(let i=0;i<22;i++){ const sx=20+i*32; x.fillRect(sx,266,8,18); x.fillRect(sx+1,260,6,6); }
+    x.fillStyle='rgba(0,0,0,0.2)'; x.fillRect(0,0,720,30);
   }
 
   function buildDifficulty(c){
@@ -159,8 +200,17 @@
     // shore battery for naval / coastal fronts
     if(camp && (camp.rules.naval || camp.rules.coastalArty)){
       const sb=el('div','card build'); sb.style.borderColor='#2e5a7a';
-      sb.innerHTML=`<div class="hk">B</div><div class="nm">Shore Battery</div><div class="co">⛽14</div>`;
+      sb.innerHTML=`<div class="hk">B</div><div class="nm">Shore Battery</div><div class="co">📦14</div>`;
       sb.onclick=()=>Engine.buildAction('shore'); deck.appendChild(sb);
+    }
+    // AIR RAID buttons (bomber always; zeppelin for German / industrial fronts)
+    const ar=el('div','card build'); ar.id='airBtn'; ar.style.borderColor='#5a4a7a';
+    ar.innerHTML=`<div class="hk">G</div><div class="nm">✈ Bomber Raid</div><div class="co">📦14 ⛽10</div><div class="cool"></div>`;
+    ar.onclick=()=>Engine.launchAirRaid('bomber'); deck.appendChild(ar);
+    if(camp && camp.faction==='german'){
+      const zp=el('div','card build'); zp.id='zepBtn'; zp.style.borderColor='#5a4a7a';
+      zp.innerHTML=`<div class="hk">Z</div><div class="nm">Zeppelin</div><div class="co">📦18 ⛽16</div><div class="cool"></div>`;
+      zp.onclick=()=>Engine.launchAirRaid('zeppelin'); deck.appendChild(zp);
     }
   }
 
@@ -201,8 +251,12 @@
     onTick(s){
       $('rm').textContent=Math.floor(s.res.m);
       $('rs').textContent=Math.floor(s.res.s);
+      $('rf').textContent=Math.floor(s.res.f);
       $('rt').textContent=s.time;
       $('runits').textContent=s.units;
+      // air raid cooldown overlay
+      ['airBtn','zepBtn'].forEach(id=>{ const b=$(id); if(b){ const co=b.querySelector('.cool');
+        if(s.airRaidCd>0){ co.style.display='flex'; co.textContent=s.airRaidCd.toFixed(1); } else co.style.display='none'; } });
       // charge / ability
       const pct=s.charge/s.chargeMax;
       $('chargeBar').style.width=(pct*100)+'%';
@@ -305,6 +359,8 @@
       else if(k==='e'){ Engine.buildAction('trench'); }
       else if(k==='w'){ Engine.buildAction('wire'); }
       else if(k==='b'){ Engine.buildAction('shore'); }
+      else if(k==='g'){ Engine.launchAirRaid('bomber'); }
+      else if(k==='z'){ Engine.launchAirRaid('zeppelin'); }
       else if(k==='t'){ Engine.toggleArtyMode(); }
       else if(k==='r'){ Engine.fireAbility(); }
       else if(k==='m'){ const m=!Sound.isMuted(); Sound.setMuted(m); $('mutebtn').textContent=m?'🔇 Muted':'🔊 Sound'; }
@@ -324,9 +380,9 @@
     const wake=()=>{ Sound.resume(); document.removeEventListener('pointerdown',wake); document.removeEventListener('keydown',wake); };
     document.addEventListener('pointerdown',wake); document.addEventListener('keydown',wake);
     // menu navigation
-    $('btnPlay').onclick=()=>{ Sound.SFX.click(); show('campaign-select'); };
+    $('menuScene').addEventListener('click', menuClick);
     $('btnHelp').onclick=()=>show('help');
-    document.querySelectorAll('.back-to-menu').forEach(b=>b.onclick=()=>{ show('menu'); startMenuBg(); });
+    document.querySelectorAll('.back-to-menu').forEach(b=>b.onclick=()=>{ show('menu'); startMenuScene(); });
     document.querySelectorAll('.back-to-camp').forEach(b=>b.onclick=()=>show('campaign-select'));
     $('btnReplay').onclick=()=>show('campaign-select');
     $('introSkip').onclick=()=>endIntro();
@@ -334,7 +390,7 @@
     $('mutebtn').onclick=()=>{ const m=!Sound.isMuted(); Sound.setMuted(m); $('mutebtn').textContent=m?'🔇 Muted':'🔊 Sound'; };
     // loading -> intro -> menu
     show('loading');
-    runLoading(()=>runIntro(()=>{ show('menu'); startMenuBg(); }));
+    runLoading(()=>runIntro(()=>{ show('menu'); startMenuScene(); }));
   }
 
   // ---------------------------------------------------------------- INTRO CINEMATIC
@@ -348,60 +404,97 @@
     let t=0;
     function frame(){
       introRaf=requestAnimationFrame(frame); t+=1/60;
-      const zoom=1+t*0.06;
+      const zoom=1+t*0.05;
       x.fillStyle='#0d1418'; x.fillRect(0,0,720,360);
-      // pixel map of Europe (stylised landmass) zooming in
+      // PIXELATED WW1 situation map (real theatre + active fronts), zooming in
       x.save(); x.translate(360,180); x.scale(zoom,zoom); x.translate(-360,-180);
-      x.fillStyle='#2b3a2e';
-      const land=[[120,80,260,70],[150,150,360,80],[300,120,180,120],[200,220,300,60],[420,90,120,160],[100,120,90,120]];
-      land.forEach(r=>x.fillRect(r[0],r[1],r[2],r[3]));
-      x.fillStyle='#1c2a30'; x.fillRect(0,0,720,40); x.fillRect(0,320,720,40);
-      // Central Powers territory glow
-      x.fillStyle='rgba(160,40,30,'+(0.2+0.1*Math.sin(t*3))+')'; x.fillRect(280,120,200,140);
+      WarMap.draw(x, 20, 24, 680, 312, {title:false, legend:false, t});
       x.restore();
       // flags rising from the bottom
       const nations=['german','austria','ottoman','bulgaria'];
-      for(let i=0;i<4;i++){ const rise=Math.min(1,Math.max(0,(t-0.4-i*0.25))); const fy=360-rise*150;
-        S.drawFlag(x, 200+i*100, fy, nations[i], t*12); if(nations[i]==='ottoman') S.drawOttomanCrescent(x,200+i*100,fy); }
-      // vignette
-      x.fillStyle='rgba(0,0,0,0.35)'; x.fillRect(0,0,720,70); x.fillRect(0,290,720,70);
-      // voiceover text, line by line
+      for(let i=0;i<4;i++){ const rise=Math.min(1,Math.max(0,(t-0.4-i*0.25))); const fy=360-rise*120;
+        S.drawFlag(x, 210+i*100, fy, nations[i], t*12); if(nations[i]==='ottoman') S.drawOttomanCrescent(x,210+i*100,fy); }
+      // vignette + caption band
+      x.fillStyle='rgba(0,0,0,0.40)'; x.fillRect(0,0,720,40); x.fillRect(0,300,720,60);
       const li=Math.floor(t/1.5);
       if(li<lines.length){ const la=Math.min(1,(t/1.5-li)); x.globalAlpha=la;
         x.fillStyle='#ffe9b0'; x.font='bold 26px Georgia'; x.textAlign='center';
-        x.fillText(lines[li],360,330); x.textAlign='left'; x.globalAlpha=1; }
-      // occasional drum hit
+        x.fillText(lines[li],360,338); x.textAlign='left'; x.globalAlpha=1; }
       if(Math.floor(t*2)!==Math.floor((t-1/60)*2) && !Sound.isMuted()) Sound.SFX.shout();
-      if(t>5.4) endIntro();
+      if(t>5.6) endIntro();
     }
     frame();
   }
   function endIntro(){ if(introRaf){cancelAnimationFrame(introRaf); introRaf=null;} const d=introDone; introDone=null; if(d)d(); }
 
-  // ---------------------------------------------------------------- ANIMATED MENU BACKGROUND
-  let menuRaf=null;
-  function startMenuBg(){
-    let c=$('menuBg');
-    if(!c){ c=el('canvas'); c.id='menuBg'; $('menu').insertBefore(c, $('menu').firstChild); }
-    c.width=960; c.height=540; const x=c.getContext('2d'); x.imageSmoothingEnabled=false;
+  // ---------------------------------------------------------------- MENU SCENE (wooden signboard + theatre map)
+  let menuRaf=null, menuHot={};
+  function woodPanel(x,X,Y,W,Hh){
+    x.fillStyle='#6e4a26'; x.fillRect(X,Y,W,Hh);
+    for(let i=0;i<W;i+=Math.max(18,W/8)){ x.fillStyle=(i/18)%2?'#7a5430':'#674427'; x.fillRect(X+i,Y,Math.max(18,W/8)-2,Hh); }
+    x.fillStyle='#4a3018'; x.fillRect(X,Y,W,4); x.fillRect(X,Y+Hh-5,W,5);   // frame top/bottom
+    x.fillStyle='#3a2614'; x.fillRect(X,Y,4,Hh); x.fillRect(X+W-4,Y,4,Hh);
+    x.fillStyle='#2a1c0e'; [[X+7,Y+7],[X+W-11,Y+7],[X+7,Y+Hh-11],[X+W-11,Y+Hh-11]].forEach(p=>x.fillRect(p[0],p[1],4,4)); // bolts
+  }
+  function startMenuScene(){
+    const c=$('menuScene'); if(!c) return;
+    const x=c.getContext('2d');
     if(menuRaf) cancelAnimationFrame(menuRaf);
     let t=0;
     function frame(){
       if(!$('menu').classList.contains('active')){ menuRaf=null; return; }
       menuRaf=requestAnimationFrame(frame); t+=1/60;
-      // three parallax bands: trenches, desert, mountains
-      x.fillStyle='#1a140d'; x.fillRect(0,0,960,540);
-      x.fillStyle='#241c12'; for(let i=0;i<8;i++){ const yy=120+i*52; x.fillRect((t*8+i*40)%960-40,yy,60,26); x.fillRect((t*8+i*40+200)%960-40,yy,40,26); }
-      // distant mountains
-      x.fillStyle='#2a2f2a'; for(let i=0;i<7;i++){ const mx=i*150-(t*4%150); x.beginPath(); x.moveTo(mx,200); x.lineTo(mx+75,90); x.lineTo(mx+150,200); x.fill(); }
-      // muzzle-flash flickers on the horizon
-      if(Math.random()<0.06){ x.fillStyle='rgba(255,210,120,0.5)'; x.fillRect(Math.random()*960,180+Math.random()*40,6,3); }
-      // foreground silhouette trench + soldiers
-      x.fillStyle='#0d0a07'; x.fillRect(0,430,960,110);
-      for(let i=0;i<10;i++){ x.fillStyle='#000'; const sx=40+i*100; x.fillRect(sx,400,10,30); x.fillRect(sx+6,392,14,2); }
-      x.fillStyle='rgba(13,10,7,0.55)'; x.fillRect(0,0,960,540);
+      const W=c.clientWidth||window.innerWidth, H=c.clientHeight||window.innerHeight;
+      if(c.width!==W||c.height!==H){ c.width=W; c.height=H; }
+      // --- outdoor scene: sky + green field (matches the park-signboard look) ---
+      const sky=x.createLinearGradient(0,0,0,H*0.45); sky.addColorStop(0,'#9fc4e0'); sky.addColorStop(1,'#cfe3ec'); x.fillStyle=sky; x.fillRect(0,0,W,H*0.45);
+      // drifting clouds
+      x.fillStyle='rgba(255,255,255,0.7)'; for(let i=0;i<4;i++){ const cx=((t*12+i*260)%(W+200))-100, cy=40+i*22; x.beginPath(); x.ellipse(cx,cy,46,16,0,0,7); x.ellipse(cx+34,cy+6,34,13,0,0,7); x.fill(); }
+      const grd=x.createLinearGradient(0,H*0.45,0,H); grd.addColorStop(0,'#7fa55a'); grd.addColorStop(1,'#5c8040'); x.fillStyle=grd; x.fillRect(0,H*0.45,W,H*0.55);
+      // dirt path + tufts
+      x.fillStyle='#a98a55'; x.beginPath(); x.moveTo(W*0.42,H); x.lineTo(W*0.48,H*0.55); x.lineTo(W*0.55,H*0.55); x.lineTo(W*0.62,H); x.fill();
+      x.fillStyle='#4e6e36'; for(let i=0;i<40;i++){ const gx=(i*97)%W, gy=H*0.5+((i*53)%(H*0.5)); x.fillRect(gx,gy,3,5); }
+      // distant trees
+      for(let i=0;i<6;i++){ const tx=60+i*((W-120)/5), ty=H*0.45; x.fillStyle='#3f5a30'; x.beginPath(); x.ellipse(tx,ty-26,26,30,0,0,7); x.fill(); x.fillStyle='#5a3a1c'; x.fillRect(tx-4,ty-4,8,18); }
+
+      // --- LEFT control panel (START) ---
+      const lpW=Math.min(190,W*0.18), lpH=Math.min(300,H*0.5), lpX=W*0.05, lpY=H*0.22;
+      x.fillStyle='#3a2614'; x.fillRect(lpX+lpW*0.42,lpY+lpH,10,H-(lpY+lpH));   // post
+      woodPanel(x,lpX,lpY,lpW,lpH);
+      // small flag plate (top)
+      S.drawFlag(x, lpX+lpW*0.5-9, lpY+34, 'german', t*10);
+      x.fillStyle='#e8dcc0'; x.font='bold 11px Georgia'; x.textAlign='center'; x.fillText('CENTRAL POWERS', lpX+lpW*0.5, lpY+46);
+      // green START!! button
+      const bW=lpW*0.74, bH=44, bX=lpX+lpW*0.5-bW/2, bY=lpY+lpH*0.40, pulse=0.5+0.5*Math.sin(t*4);
+      x.fillStyle='#0d5a22'; x.fillRect(bX+3,bY+4,bW,bH);
+      x.fillStyle=`rgb(${30+pulse*20|0},${150+pulse*40|0},${50+pulse*20|0})`; x.fillRect(bX,bY,bW,bH);
+      x.strokeStyle='#0a3a16'; x.lineWidth=2; x.strokeRect(bX,bY,bW,bH);
+      x.fillStyle='#063312'; x.font='bold 22px Georgia'; x.fillText('START!!', bX+bW/2+1, bY+bH/2+8);
+      x.fillStyle='#eafff0'; x.fillText('START!!', bX+bW/2, bY+bH/2+7);
+      menuHot.start={x:bX,y:bY,w:bW,h:bH};
+      // up/down arrows
+      x.fillStyle='#e8dcc0'; const ay=bY+bH+26;
+      x.beginPath(); x.moveTo(lpX+lpW*0.5,ay-10); x.lineTo(lpX+lpW*0.5-10,ay); x.lineTo(lpX+lpW*0.5+10,ay); x.fill();
+      x.beginPath(); x.moveTo(lpX+lpW*0.5,ay+30); x.lineTo(lpX+lpW*0.5-10,ay+20); x.lineTo(lpX+lpW*0.5+10,ay+20); x.fill();
+      x.font='10px Georgia'; x.fillText('choose front', lpX+lpW*0.5, ay+12);
+
+      // --- MAIN signboard with the WW1 map ---
+      const bw=Math.min(W*0.62,H*1.05), bh=bw*0.60, bx2=W*0.32, by2=H*0.16;
+      x.fillStyle='#3a2614'; x.fillRect(bx2+bw*0.2,by2+bh,12,H-(by2+bh)); x.fillRect(bx2+bw*0.8,by2+bh,12,H-(by2+bh)); // posts
+      woodPanel(x,bx2-10,by2-10,bw+20,bh+20);
+      WarMap.draw(x, bx2+6, by2+18, bw-12, bh-26, {title:true, legend:true, t});
+
+      // game title carved above
+      x.fillStyle='#1a120a'; x.font='bold 34px Georgia'; x.textAlign='center';
+      x.fillText('IRON & FAITH', W*0.5+2, by2-22); x.fillStyle='#f0d9a0'; x.fillText('IRON & FAITH', W*0.5, by2-24);
     }
     frame();
+  }
+  function menuClick(e){
+    const c=$('menuScene'), r=c.getBoundingClientRect();
+    const mx=(e.clientX-r.left)*(c.width/r.width), my=(e.clientY-r.top)*(c.height/r.height);
+    const h=menuHot.start;
+    if(h && mx>=h.x&&mx<=h.x+h.w&&my>=h.y&&my<=h.y+h.h){ Sound.SFX.click(); show('campaign-select'); }
   }
 
   global.UI = { init };

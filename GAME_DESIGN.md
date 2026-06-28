@@ -372,4 +372,21 @@ js/audio.js  procedural Web Audio soundscape
 ```
 (added to the existing sprites/data/game/ui/main modules.)
 
+---
+
+## 14. UPGRADE PACK (v3) — IMPLEMENTED
+
+### 14.1 Signboard menu + pixelated theatre map (new `js/warmap.js`)
+The main menu is a wooden notice-board in an outdoor scene displaying a **pixelated "World War I in Europe" map** (green Central Powers, orange Allied, cream neutral; seas, country labels, battle stars, movement arrows, legend) with a green **START!!** button. The opening cinematic shows the same map pixelated and zooming.
+
+### 14.2 Air Raid System
+New **Fuel** resource + **Bomber** and **Zeppelin** raids (hotkeys G/Z). They consume Supply + Fuel, fly across the map, and bomb enemy armies / trenches / rear HQ with weather-dependent accuracy & scatter, morale **suppression**, **infrastructure** damage, and **anti-air interception** (zeppelins far easier to down). Full damage/suppression/interception formulas are in `PLANNING.md §28.2`.
+
+### 14.3 Pre-war campaigns
+A **PRE-WAR** group in the campaign select:
+- **The Khedivate Dissolved** — historical cutscene (Cairo 1914: Ottoman flag lowered, Union Jack raised over the citadel & Nile).
+- **Taiping Rebellion** — play the **Qing Empire** vs the Heavenly Kingdom.
+- **Balkan Wars** — play the **Ottoman Empire** vs the Balkan League.
+New faction **Qing Empire** (`js/data.js`) and **Qing/Serbia flags** (`js/sprites.js`); pre-war scenes via a cutscene screen.
+
 *End of Section 2 — Game Design Document. The full background/planning is in `PLANNING.md`; the playable build is `index.html`.*

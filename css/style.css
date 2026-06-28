@@ -31,9 +31,9 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif; letter-spacing:1px;}
 #introCanvas{width:min(94vw,760px);height:auto;border:3px solid var(--wood);box-shadow:0 0 0 2px var(--brass),0 12px 40px #000;}
 
 /* ---------- MENU ---------- */
-#menu{background:linear-gradient(#1a140d,#0d0a07);overflow:hidden;}
-#menuBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.9;}
-#menu > *:not(#menuBg){position:relative;z-index:1;}
+#menu{background:#6a8a5a;overflow:hidden;padding:0;}
+#menuScene{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer;z-index:0;}
+#menu > #btnHelp{position:absolute;right:14px;bottom:14px;z-index:2;}
 
 /* metallic WW1 frame helper */
 .metal{border:3px solid #6a5a3a;border-radius:3px;
@@ -60,6 +60,11 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif; letter-spacing:1px;}
 .camp-card .tag{display:inline-block; font-size:10px; padding:2px 7px; margin:6px 4px 0 0;
   background:var(--wood2); border:1px solid var(--line); color:#d8c8a6;}
 .camp-card .enemy{display:inline-block; background:#3a1410; border:1px solid var(--red); color:#e0b8a8;}
+.grid-head{grid-column:1/-1; color:var(--brass); font-family:Georgia,serif; font-size:18px;
+  border-bottom:1px solid var(--line); padding:8px 2px 4px; margin-top:6px; letter-spacing:1px;}
+.cutscene-card{border-color:var(--brass)!important; background:#2a2014!important;}
+#cutscene{background:linear-gradient(#161009,#0a0805); justify-content:flex-start; padding-top:30px;}
+#cutsceneCanvas{width:min(92vw,720px); height:auto; border:3px solid var(--wood); box-shadow:0 0 0 2px var(--brass),0 10px 30px #000; image-rendering:pixelated;}
 .back-btn{position:fixed; top:14px; left:14px; z-index:20;}
 .diff-list{display:flex; flex-direction:column; gap:8px; width:min(92vw,520px); margin-top:18px;}
 .diff-btn{padding:12px; border:2px solid var(--line); background:var(--panel); cursor:pointer; text-align:left; color:var(--paper);}

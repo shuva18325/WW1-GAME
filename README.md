@@ -4,7 +4,7 @@ A WW1 **campaign-style real-time strategy game** where you are a **commander / g
 
 > Pure browser game — no install, no build step. Open `index.html` and play.
 
-![The Central Powers — loading screen](assets/loading.png)
+![Signboard menu — World War I in Europe theatre map](screenshots/menu.png)
 
 ## ▶ Play it now (no install)
 **▶ [PLAY IN YOUR BROWSER](https://raw.githack.com/shuva18325/WW1-GAME/claude/ww1-central-powers-game-skaf1l/index.html)** — latest build, nothing to set up.
@@ -46,6 +46,13 @@ Procedural **chunky pixel-art**, re-coloured & re-helmeted per nationality (Stah
 | ![Western Front](screenshots/western_front.png) | ![Gallipoli](screenshots/gallipoli.png) |
 | Black Sea Naval Clash | Caucasus Winter Offensive |
 | ![Black Sea](screenshots/black_sea.png) | ![Caucasus Winter](screenshots/caucasus_winter.png) |
+
+### v3 upgrades
+**Wooden signboard menu** with a **pixelated "World War I in Europe" theatre map** (green Central Powers, orange Allied, cream neutral, battle stars, movement arrows, legend) + green **START!!** button · opening cinematic shows the same map pixelated & zooming · **Air Raid system** (bombers & zeppelins, new **Fuel** resource, weather accuracy, anti-air interception, suppression & infrastructure damage — formulas in `PLANNING.md §28.2`) · **PRE-WAR campaigns**: *Taiping Rebellion* (Qing Empire), *Balkan Wars* (Ottoman), and *The Khedivate Dissolved* historical cutscene.
+
+| Signboard menu | Pre-war: Khedivate dissolved |
+|---|---|
+| ![Menu](screenshots/menu.png) | ![Khedivate](screenshots/khedivate.png) |
 
 ### v2 upgrades
 Particle FX & **screen shake** · per-weapon muzzle flashes + onomatopoeia (rifle "bang", MG "BRRRRT", arty "BAAANG!", tank "KRAA-THOOM!") · **flamethrower** with burning · animated tank treads/dust/sparks · upgraded explosions · weather animations · dynamic barrage/naval lighting · **procedural Web Audio** (weapons, ambience, rumble, march music, mute) · **deployable Officers** (morale aura, mini-barrage, reinforcements) · **manual Artillery aim mode** (trajectory + impact preview) · **naval bombardment + offshore warships + steel bunkers + shore batteries** · 4 new campaigns (Caucasus Winter, Eastern Balkans, Arabian Desert Storm, Black Sea) · 20+ new units · **opening cinematic** + animated menu · victory/defeat cutscenes + **achievement medals**.

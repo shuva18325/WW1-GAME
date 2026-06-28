@@ -23,13 +23,10 @@
   <div class="menu-btn mini" id="introSkip" style="margin-top:14px">Skip ▶</div>
 </div>
 
-<!-- ============ MAIN MENU ============ -->
+<!-- ============ MAIN MENU (wooden signboard + theatre map) ============ -->
 <div id="menu" class="screen">
-  <div class="title">IRON &amp; FAITH</div>
-  <div class="subtitle">COMMAND OF THE CENTRAL POWERS</div>
-  <div class="menu-btn" id="btnPlay">⚔ CHOOSE A FRONT</div>
-  <div class="menu-btn" id="btnHelp">📖 HOW TO PLAY</div>
-  <div class="flags-row" id="menuFlags"></div>
+  <canvas id="menuScene"></canvas>
+  <div class="menu-btn mini" id="btnHelp">📖 How to Play</div>
 </div>
 
 <!-- ============ HELP ============ -->
@@ -69,15 +66,25 @@
   <div class="diff-list" id="diffList"></div>
 </div>
 
+<!-- ============ CUTSCENE (pre-war historical scenes) ============ -->
+<div id="cutscene" class="screen">
+  <div class="back-btn menu-btn mini back-to-camp">← Fronts</div>
+  <h2 id="cutsceneTitle"></h2>
+  <canvas id="cutsceneCanvas"></canvas>
+  <div id="cutsceneText" class="help" style="max-width:720px;margin-top:12px"></div>
+  <div class="menu-btn mini back-to-camp" style="margin-top:10px">Continue ▶</div>
+</div>
+
 <!-- ============ BATTLE ============ -->
 <div id="battle" class="screen">
   <div id="stage"><canvas id="game"></canvas></div>
 
   <div class="hud" id="resbar">
-    <span>⚔ <b id="rm">0</b></span>
-    <span>⛽ <b id="rs">0</b></span>
-    <span>⏱ <b id="rt">0</b>s</span>
-    <span>👥 <b id="runits">0</b></span>
+    <span title="Manpower">⚔ <b id="rm">0</b></span>
+    <span title="Supply">📦 <b id="rs">0</b></span>
+    <span title="Fuel (air raids)">⛽ <b id="rf">0</b></span>
+    <span title="Time">⏱ <b id="rt">0</b>s</span>
+    <span title="Units">👥 <b id="runits">0</b></span>
   </div>
 
   <div class="hud" id="orders"></div>
@@ -116,6 +123,7 @@
 <script src="js/sprites.js"></script>
 <script src="js/fx.js"></script>
 <script src="js/audio.js"></script>
+<script src="js/warmap.js"></script>
 <script src="js/data.js"></script>
 <script src="js/game.js"></script>
 <script src="js/ui.js"></script>

@@ -54,7 +54,7 @@
     G = {
       cfg, camp, fac, diff, theme,
       mode: camp.mode,
-      res: { m: fac.start.m*diff.econ, s: fac.start.s*diff.econ, i: fac.start.i },
+      res: { m: fac.start.m*diff.econ, s: fac.start.s*diff.econ, i: fac.start.i, f: 30 },
       charge: 0, chargeMax: fac.ability.charge,
       time: 0, elapsed: 0,
       limit: camp.mode==='defence' ? 165 : 210,    // seconds
@@ -72,6 +72,7 @@
       voiceCool: 0, frozenT:0,
       artyMode:false, artyAim:{x:W*0.7,y:H*0.5}, artyCd:0,   // manual artillery control
       shoreBatteries:0,                                       // naval/coastal defence
+      aircraft:[], airRaidCd:0,                               // air raid system
       bg: buildBackground(theme, camp)
     };
     FX.reset();
@@ -120,6 +121,8 @@
     // economy
     G.res.m = Math.min(140, G.res.m + G.fac.regen.m*dt*G.diff.econ);
     G.res.s = Math.min(140, G.res.s + G.fac.regen.s*dt*G.diff.econ);
+    G.res.f = Math.min(100, G.res.f + 1.3*dt*G.diff.econ);          // fuel for air raids
+    if(G.airRaidCd>0) G.airRaidCd-=dt;
     G.charge = Math.min(G.chargeMax, G.charge + dt* (G.surge? 3.2 : 1.6));
     if(G.surge){ G.surge-=dt; if(G.surge<0)G.surge=0; }
     if(G.holdT){ G.holdT-=dt; if(G.holdT<0)G.holdT=0; }
@@ -159,6 +162,7 @@
     if(G.artyCd>0) G.artyCd-=dt;
 
     updateUnits(dt);
+    updateAircraft(dt);
     updateProjectiles(dt);
     updateEffects(dt);
     FX.update(dt);
@@ -588,6 +592,65 @@
     return true;
   }
 
+  // ---------------------------------------------------------------- AIR RAID SYSTEM
+  // weather → accuracy / visibility (also gates interception)
+  function weatherAcc(){ return ({clear:1.0,rain:0.7,fog:0.55,sandstorm:0.5,snow:0.75,cold:0.75,gas:0.9,mud:0.85})[G.weather] ?? 1.0; }
+  function weatherVis(){ return ({clear:1.0,rain:0.7,fog:0.5,sandstorm:0.6,snow:0.8,cold:0.8,gas:0.85,mud:0.9})[G.weather] ?? 1.0; }
+
+  function launchAirRaid(kind){
+    if(!G||G.over) return false;
+    kind = kind==='zeppelin'?'zeppelin':'bomber';
+    if(G.airRaidCd>0){ hud.onDenied&&hud.onDenied('Airfield rearming'); return false; }
+    const cost = kind==='zeppelin'?{s:18,f:16}:{s:14,f:10};
+    if(G.res.s<cost.s || G.res.f<cost.f){ hud.onDenied&&hud.onDenied('Need supply + fuel'); return false; }
+    G.res.s-=cost.s; G.res.f-=cost.f;
+    G.airRaidCd = kind==='zeppelin'?13:9;
+    G.aircraft.push({ kind, x:PLAYER_HQ_X-30, y:TOP+22+rnd(-6,6),
+      vx: kind==='zeppelin'?72:150, lane:G.activeLane,
+      targetX: clamp(ENEMY_TRENCH+rnd(-30,40),W*0.55,ENEMY_HQ_X-10),
+      bombs: kind==='zeppelin'?6:4, dropped:false, hp: kind==='zeppelin'?60:30, alive:true, prop:0 });
+    Sound.SFX.click(); speak(null, kind==='zeppelin'?'Zeppelin away — bomb their lines!':'Bombers up — strike the rear!');
+    banner('AIR RAID', (kind==='zeppelin'?'Zeppelin':'Bomber flight')+' inbound — targeting enemy positions.');
+    return true;
+  }
+
+  function updateAircraft(dt){
+    if(!G.aircraft.length) return;
+    const acc=weatherAcc(), vis=weatherVis();
+    const live=[];
+    for(const a of G.aircraft){
+      a.x += a.vx*dt; a.prop+=dt;
+      // enemy anti-air / interception while over contested + enemy ground
+      if(a.x>W*0.42 && a.x<ENEMY_HQ_X){
+        const aa = (0.10 + 0.06*G.diff.enemyRate) * (a.kind==='zeppelin'?1.9:1) / vis;  // per-second hazard
+        if(Math.random() < aa*dt){
+          a.hp -= rnd(14,28); FX.sparks(a.x+rnd(-10,10), a.y+rnd(-6,6), 1); Sound.SFX.sparks();
+          if(a.hp<=0){ // shot down
+            FX.explosion(a.x,a.y,30); Sound.SFX.explosion(30); speak(null,'Aircraft down!');
+            a.alive=false; continue;
+          }
+        }
+      }
+      // bomb run
+      if(!a.dropped && a.x>=a.targetX){
+        a.dropped=true;
+        const scatter = 16/acc, base=(a.kind==='zeppelin'?26:30);
+        for(let i=0;i<a.bombs;i++){
+          const tx = a.targetX + (i-a.bombs/2)*20 + rnd(-scatter,scatter);
+          const ty = laneY(a.lane) + rnd(-scatter*0.4,scatter*0.4);
+          const dmg = base*acc;
+          addEffect({type:'shell',x:a.x,y:a.y+6,tx,ty,t:0,dur:0.5+ i*0.06,onLand:()=>{
+            explode(tx,ty,40,dmg,'player',true);             // damage + suppression + trench/depot loss
+            if(tx>ENEMY_HQ_X-50) G.hqEnemy=Math.max(0,G.hqEnemy-dmg*0.25);  // infrastructure: rear HQ/depot
+          }});
+        }
+        FX.popup(a.x,a.y-12,'BOMBS AWAY','255,210,130');
+      }
+      if(a.x<W+50 && a.alive) live.push(a);
+    }
+    G.aircraft=live;
+  }
+
   // ---------------------------------------------------------------- orders
   function setOrder(o){ if(!G)return; G.order=o; for(const u of G.units) if(u.side==='player'&&!u.def.flags.isEngineer&&!u.def.flags.indirect) u.order=o; }
   function selectLane(i){ if(!G)return; G.activeLane=clamp(i,0,NLANES-1); }
@@ -638,6 +701,7 @@
       paused:G.paused, units:G.units.length,
       tankResearched:G.tankResearched,
       artyMode:G.artyMode, artyCd:Math.max(0,G.artyCd), shoreBatteries:G.shoreBatteries,
+      airRaidCd:Math.max(0,G.airRaidCd), aircraft:G.aircraft.length,
       frozen:G.frozenT>0 };
   }
 
@@ -691,10 +755,11 @@
     // central road/line (reference look)
     ctx.fillStyle='#2a2018'; ctx.fillRect(W*0.5-2,TOP,4,H-TOP);
 
-    // HQ markers + flags
-    S.drawFlag(ctx, PLAYER_HQ_X, TOP+30, G.fac.nation);
-    if(G.fac.nation==='ottoman') S.drawOttomanCrescent(ctx, PLAYER_HQ_X, TOP+30);
-    S.drawFlag(ctx, ENEMY_HQ_X, TOP+30, G.camp.enemyNation||'british');
+    // HQ markers + flags (player uses the campaign flag, e.g. Qing yellow)
+    const pflag = G.camp.flag || G.fac.flagNation || G.fac.nation;
+    S.drawFlag(ctx, PLAYER_HQ_X, TOP+30, pflag, G.time*8);
+    if(pflag==='ottoman') S.drawOttomanCrescent(ctx, PLAYER_HQ_X, TOP+30);
+    S.drawFlag(ctx, ENEMY_HQ_X, TOP+30, G.camp.enemyNation||'british', G.time*8);
     // HQ bunkers — steel pillboxes on coastal/naval fronts, earthworks elsewhere
     const coastal = G.camp.rules.naval || G.camp.rules.coastalArty || G.camp.theme==='beach';
     if(coastal){
@@ -714,6 +779,12 @@
     // units sorted by lane then x for depth
     const us=[...G.units].sort((a,b)=> a.lane-b.lane || a.x-b.x);
     for(const u of us) drawUnit(u);
+
+    // aircraft (air raids)
+    for(const a of G.aircraft){
+      if(a.kind==='zeppelin') S.drawZeppelin(ctx, a.x-40*SS, a.y-8*SS, SS);
+      else S.drawPlane(ctx, a.x, a.y, SS, 1, (a.prop*30|0)%2);
+    }
 
     // effects
     for(const e of G.effects) drawEffect(e);
@@ -832,7 +903,7 @@
   // ---------------------------------------------------------------- public
   global.Engine = {
     init, start, spawnUnit, fireAbility, buildAction, setOrder, selectLane, togglePause,
-    toggleArtyMode, setArtyAim, fireArty,
+    toggleArtyMode, setArtyAim, fireArty, launchAirRaid,
     get state(){ return G; }, W, H, NLANES,
     laneFromY:(y)=>clamp(Math.floor((y-TOP)/laneH),0,NLANES-1),
     fromScreen:(nx,ny)=>({x:nx*W, y:ny*H})

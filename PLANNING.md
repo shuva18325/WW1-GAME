@@ -559,4 +559,33 @@ Rifle recoil · MG barrel heat glow · animated tank treads · flamethrower flam
 ### 27.8 Final polish (new)
 Metallic WW1 UI frame styling · faction-coloured menu accents · animated campaign/aftermath transitions · **victory & defeat cutscenes** with faction-flavoured summaries · **pixel-art achievement medals** · difficulty-scaled economy & enemy AI · epic end-of-campaign stat summaries.
 
+---
+
+## 28. ADDENDUM — SIGNBOARD MENU, AIR WAR & PRE-WAR (v3)
+
+### 28.1 Wooden signboard starting menu + theatre map
+The starting menu is an **outdoor park-style scene** (sky, drifting clouds, green field, dirt path, trees) with a **wooden notice-board** mounted on posts. On the board is a **pixelated recreation of the "World War I in Europe" theatre map**: green = Central Powers, orange = Allied Powers, cream = neutral nations, blue seas (Atlantic, North, Baltic, Mediterranean, Black, Adriatic, Caspian), labelled countries, **major battle stars** (Jutland, Lusitania, Somme, Verdun, Masurian Lakes, Caporetto, Gallipoli, Baghdad), **movement arrows** (green = Central advance, red = Allied), and a **legend**. A smaller wooden panel on the left carries the faction flag and a big green **START!!** button with arrows. The **opening cinematic** shows the same map, **pixelated and zooming in**, as the four Central Powers flags rise and the voiceover plays.
+
+### 28.2 Air Raid System (new mechanic)
+Strategic air power layered on top of the ground war.
+- **Assets:** **Bomber flights** and (German/industrial fronts) **Zeppelins**. Hotkeys **G** / **Z**, or the deck cards.
+- **Cost:** Bomber = 14 Supply + 10 **Fuel**; Zeppelin = 18 Supply + 16 Fuel. New **Fuel** resource regenerates over time and is shown in the HUD.
+- **Targets:** enemy armies, trenches (integrity), rear **supply depots / HQ** (infrastructure), with morale **suppression** in the blast.
+- **Accuracy & weather:** clear bombing is tight; rain/fog/sandstorm/snow widen the **scatter** and cut damage.
+- **Anti-air & interception:** while over contested/enemy ground the aircraft faces **AA fire**; a hit can shoot it down (and zeppelins, slow and huge, are far easier to intercept) — a raid downed before its drop is wasted.
+- **Formulas (as implemented):**
+  - Weather accuracy `A`: clear 1.0 · mud .85 · gas .9 · snow/cold .75 · rain .7 · fog .55 · sandstorm .5.
+  - Weather visibility `V` (gates interception): clear 1.0 · mud .9 · gas .85 · snow .8 · rain .7 · sandstorm .6 · fog .5.
+  - Bombs per run: Bomber 4, Zeppelin 6. Per-bomb damage `D = Base × A` (Base 30 bomber / 26 zeppelin).
+  - Scatter radius `= 16 / A` (worse weather → wider spread).
+  - **Suppression:** each bomb applies area morale −18 (armour-ignoring damage to units in radius).
+  - **Infrastructure loss:** trench HP `−= D`; rear hits (within ~50px of enemy HQ) reduce enemy HQ by `D × 0.25`.
+  - **Interception per second** `P = (0.10 + 0.06 × enemyRate) × (zeppelin ? 1.9 : 1) / V`, applied over enemy ground; a hit removes 14–28 aircraft HP (Bomber HP 30, Zeppelin 60).
+
+### 28.3 Pre-war campaigns
+A **PRE-WAR** section sits above the Great War fronts in the campaign select:
+- **The Khedivate Dissolved (Cairo, 1914)** — a **historical cutscene** (pyramids, the Nile, the Cairo citadel; the Ottoman crescent lowered and the Union Jack raised) dramatising Britain dissolving the Egyptian Khedivate and declaring a protectorate.
+- **Taiping Rebellion (1850–1864)** — playable as the **Qing Empire** (yellow imperial standard) holding the line against the Heavenly Kingdom's massed armies with imperial artillery and numbers.
+- **Balkan Wars (1912–1913)** — playable as the **Ottoman Empire** defending Ottoman Europe in the mountains against the **Balkan League** (Serbia/Bulgaria/Greece/Montenegro), the last war before the Great War.
+
 *End of Section 1 — Full Planning Section. Section 2 (the game design document) follows in `GAME_DESIGN.md`, and the playable prototype lives in `index.html` + `js/`.*

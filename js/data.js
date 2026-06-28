@@ -161,6 +161,18 @@
       voice:{ spawn:['The desert hides us.','Strike fast, vanish faster.'],
         sabotage:['Cut their supply lines!'],
         ability:['Raiders, strike!'] }
+    },
+    qing: {     // pre-war: Taiping Rebellion
+      name:'Qing Empire', nation:'ottoman', flagNation:'qing', color:'#f2c200',
+      start:{m:65,s:45,i:1}, regen:{m:3.4, s:2.2}, spawnSpeed:1.05,
+      buffs:['Vast numbers','Imperial artillery'],
+      debuffs:['Aging equipment','Morale instability'],
+      mult:{ routChance:1.1, artyPower:1.1 },
+      ability:{ id:'artillery_barrage', name:'IMPERIAL CANNONADE', charge:52,
+        desc:'Heavy bombardment + morale boost + enemy suppression' },
+      roster:['o_regular','o_elite','o_eliterifle','o_mg','o_mortar','o_engineer','o_officer'],
+      voice:{ spawn:['For the Dragon Throne!','Hold, soldiers of the Qing!'],
+        advance:['Advance the banners!'], ability:['Cannons — open fire!'] }
     }
   };
 
@@ -288,6 +300,34 @@
       events:['naval_bombardment','amphibious_landing','mass_assault','caliphate_call'],
       brief:'The Russian fleet shells the coast and lands marines on the shingle. Build shore batteries and bunkers, weather the naval guns, and throw every amphibious landing back into the Black Sea.',
       intel:'Enemy: Russian navy · Naval bombardment · Amphibious landings · DEFENCE'
+    },
+
+    // ===== PRE-WAR CAMPAIGNS =====
+    {
+      id:'khedivate', era:'prewar', type:'cutscene', name:'The Khedivate Dissolved', faction:'ottoman', flag:'ottoman',
+      subtitle:'Cairo, 18 December 1914 — Egypt severed from the Sultan',
+      brief:'A historical scene: as the Ottoman Empire enters the war, Britain dissolves the Khedivate of Egypt, deposes the Khedive, and declares a Sultanate under its protectorate — cutting Cairo from Constantinople.',
+      intel:'Pre-war cutscene'
+    },
+    {
+      id:'taiping', era:'prewar', name:'Taiping Rebellion', faction:'qing', flag:'qing',
+      subtitle:'1850–1864 — Qing Empire vs the Heavenly Kingdom',
+      mode:'mixed', theme:'mud', difficulties:DIFFS_3,
+      enemies:['e_russian','e_brit_line','e_russian'], enemyNation:'russian',
+      rules:{ horde:true },
+      events:['mass_assault','supply_convoy','artillery_ready'],
+      brief:'Decades before the World War, the Heavenly Kingdom rises across southern China. Hold the Qing line against vast rebel armies with imperial artillery, officers, and sheer weight of numbers.',
+      intel:'PRE-WAR · Qing vs Taiping · Massed infantry · Artillery'
+    },
+    {
+      id:'balkan_wars', era:'prewar', name:'Balkan Wars', faction:'ottoman', flag:'ottoman',
+      subtitle:'1912–1913 — Ottoman Empire vs the Balkan League',
+      mode:'mixed', theme:'mountain', difficulties:DIFFS_3,
+      enemies:['e_brit_line','e_french','e_russian'], enemyNation:'serbia',
+      rules:{ ambush:true, mountainBonus:true },
+      events:['mass_assault','ambush_ready','river_crossing'],
+      brief:'The Balkan League — Serbia, Bulgaria, Greece, Montenegro — turns on the empire. Defend Ottoman Europe in the mountain passes in the last war before the Great War.',
+      intel:'PRE-WAR · Ottoman vs Balkan League · Mountain warfare'
     }
   ];
 
